@@ -20,7 +20,9 @@ def _input(prompt, placeholder="", password=False):
             command += ["--placeholder", placeholder]
         if password:
             command.append("--password")
-        done = subprocess.run(command, text=True, capture_output=True)
+        # Gum draws its interactive UI on stderr. Keep that stream attached to
+        # the terminal; piping it makes gum 2.x fail before it accepts input.
+        done = subprocess.run(command, text=True, stdout=subprocess.PIPE)
         if done.returncode != 0:
             raise KeyboardInterrupt
         return done.stdout.strip()
