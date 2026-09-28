@@ -248,20 +248,20 @@ Item {
 
               PolicyChoice {
                 value: "verified"
-                label: "When the sender is known"
-                hint: "Signed by the sender's own domain, or someone you named. "
-                      + "Most real mail is signed; a tracking pixel in it will load."
+                label: "Any verified sender"
+                hint: "Opt in: even unfamiliar senders can sign their own mail. "
+                      + "Opening it may load a tracking pixel."
               }
 
               PolicyChoice {
                 value: "trusted"
-                label: "Only senders I have named"
-                hint: "Nothing loads until you say so for that sender."
+                label: "Named and verified senders"
+                hint: "The sender must be on your list and pass DKIM or DMARC."
               }
 
               PolicyChoice {
                 value: "never"
-                label: "Never, always ask"
+                label: "Never, always ask (default)"
                 hint: "Every message offers the button and none acts on its own."
               }
             }
@@ -270,9 +270,10 @@ Item {
             Column {
               id: setupBlock
               readonly property var state: service.setupState
-              readonly property bool renderReady: !!(state && state.renderer.active)
+              readonly property bool renderReady: !!(state && state.renderer.active
+                                                     && !state.renderer.stale)
               readonly property bool complete: !!(state && state.cli.ok
-                                                  && state.renderer.active && state.mailto.ok
+                                                  && renderReady && state.mailto.ok
                                                   && (!state.launcher || state.launcher.ok))
               width: parent.width
               spacing: Style.space(6)
@@ -294,19 +295,30 @@ Item {
                 done: setupBlock.renderReady
                 label: {
                   var r = setupBlock.state ? setupBlock.state.renderer : null
-                  if (!r || r.active) return "Mail rendered as HTML"
+                  if (!r || (r.active && !r.stale)) return "Mail rendered as HTML"
                   if (!r.built) return "Mail rendered as HTML" + (r.compiler ? "" : " — needs gcc")
+                  if (r.stale) return "Remove the old session-wide LD_PRELOAD line"
                   if (r.configured) return "Mail rendered as HTML — restart the shell to start it"
-                  return "Mail rendered as HTML — "
-                    + (r.stale ? "replace the argcshim line in" : "add this line to")
-                    + " ~/.config/hypr/hyprland.lua, then restart the shell:"
+                  return "Mail rendered as HTML — add this PATH line to "
+                    + "~/.config/hypr/hyprland.lua, then restart the shell:"
                 }
               }
-              // The one step left to you: Olook does not edit Hyprland's
-              // config, so the line is offered to copy.
+              Text {
+                visible: !!(setupBlock.state && setupBlock.state.renderer.stale)
+                textFormat: Text.PlainText
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: "Remove any old LD_PRELOAD line containing argcshim.so from "
+                      + "~/.config/hypr/hyprland.lua. It loads the library across "
+                      + "the session. The new PATH line starts it only with Omarchy's shell."
+                color: ui.urgent
+                font.family: ui.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+              // The renderer is optional. Without the PATH line, Qt's rich
+              // text renderer remains available.
               Row {
                 visible: !!(setupBlock.state && setupBlock.state.renderer.built
-                            && !setupBlock.state.renderer.active
                             && !setupBlock.state.renderer.configured)
                 leftPadding: Style.space(22)
                 spacing: Style.space(8)

@@ -45,11 +45,10 @@ if [[ "$MODE" == "uninstall" ]]; then
   reload_shell
   echo "Olook removed. Mail cache and accounts were left alone:"
   echo "  ~/.config/olook  ~/.local/state/olook"
-  if grep -qs "argcshim.so" "$HOME/.config/hypr/hyprland.lua"; then
+  if grep -qsE "argcshim.so|ttt.olook/bin" "$HOME/.config/hypr/hyprland.lua"; then
     echo
-    echo "Also drop the LD_PRELOAD line from ~/.config/hypr/hyprland.lua:"
-    echo "  it names a file that is now gone, and the dynamic linker will"
-    echo "  complain about it in every process you start."
+    echo "Also remove Olook's PATH line or any old LD_PRELOAD line from ~/.config/hypr/hyprland.lua."
+    echo "  A leftover LD_PRELOAD line names a deleted library and affects every new process."
   fi
   exit 0
 fi

@@ -339,7 +339,7 @@ def cmd_auth(args):
 
     try:
         oauth.authorize(account, opener, flow=args.flow)
-    except oauth.OAuthError as exc:
+    except (oauth.OAuthError, keyring.SecretStorageError) as exc:
         if args.stream:
             emit_event({"event": "error", "error": str(exc)})
             sys.exit(1)
@@ -397,7 +397,7 @@ def _authorize_extras(args, account, opener):
         try:
             payload = oauth.authorize(grant, report, flow=args.flow)
             oauth.store_tokens(grant["id"], payload)
-        except oauth.OAuthError as exc:
+        except (oauth.OAuthError, keyring.SecretStorageError) as exc:
             note = ("Mail is signed in. The calendar and contacts were not: "
                     + str(exc))
             if args.stream:
@@ -708,14 +708,14 @@ def _run_grant(args, account, grant, what):
     report = _auth_reporter(args)
     try:
         payload = oauth.authorize(grant, report, flow=args.flow or None)
-    except oauth.OAuthError as exc:
+        oauth.store_tokens(grant["id"], payload)
+    except (oauth.OAuthError, keyring.SecretStorageError) as exc:
         detail = _consent_advice(args, str(exc))
         if getattr(args, "stream", False):
             emit_event({"event": "error", "error": detail})
             sys.exit(1)
         raise CliError(detail) from exc
 
-    oauth.store_tokens(grant["id"], payload)
     if getattr(args, "stream", False):
         emit_event({"ok": True, "event": "done", "account": account["id"]})
         return
@@ -1392,30 +1392,32 @@ def _body_payload(body, summary, forced_remote):
 def _auto_images(body, summary):
     """Whether this message's pictures may load without being asked.
 
-    Two things have to hold: the sender is one you have said yes to, and the
-    message really is from them. DKIM or DMARC passing is what makes the
-    second true, and is the whole reason the list is safe to keep. Without it,
-    anyone could put your bank's address in a From line and inherit the
-    permission you gave your bank.
+    For the named-sender policy, two things have to hold: the sender is one
+    you have approved, and the receiving provider verified their identity.
+    Without that second check, anyone could put your bank's address in a
+    From line and inherit the permission you gave your bank.
     """
     account = None
     try:
         account = config.account((summary or {}).get("account") or None)
     except config.ConfigError:
         pass
-    auth = message.authentication((body or {}).get("headers") or {}, account)
-    sender = str((summary or {}).get("fromAddr") or "").strip().lower()
+    headers = (body or {}).get("headers") or {}
+    auth = message.authentication(headers, account)
+    # Decide from the message being displayed, not a possibly stale summary.
+    addresses = message.address_list(headers, "From")
+    sender = addresses[0]["address"].strip().lower() if len(addresses) == 1 else ""
     trusted = bool(sender) and sender in config.trusted_senders()
     policy = config.image_policy()
 
     if policy == "never":
         auto = False
     elif policy == "trusted":
-        auto = trusted
+        auto = trusted and auth["verified"]
     else:
-        # Signed mail, or a sender you named. The list still matters: it is
-        # how a sender whose server says nothing about them gets through.
-        auto = trusted or auth["verified"]
+        # This broad policy is opt-in. Naming an address must never let an
+        # unauthenticated message borrow its permission.
+        auto = auth["verified"]
 
     return {
         "authentication": auth,
@@ -1942,16 +1944,18 @@ def _describe_setup(d):
     lines = []
     lines.append(("ok   " if state["cli"]["ok"] else "--   ") + "olook command at " + state["cli"]["path"])
     r = state["renderer"]
-    if r["active"]:
-        lines.append("ok   HTML renderer active")
+    if r["stale"]:
+        lines.append("!!   Remove the old LD_PRELOAD line naming argcshim.so from "
+                     "~/.config/hypr/hyprland.lua; it affects the whole session.")
+    if r["active"] and not r["stale"]:
+        lines.append("ok   HTML renderer active in the Omarchy shell")
     elif not r["built"]:
         lines.append("--   HTML renderer not built" + ("" if r["compiler"] else " (needs gcc)"))
     elif r["configured"]:
         lines.append("--   HTML renderer ready; restart the shell: omarchy restart shell")
     else:
-        lines.append("--   HTML renderer built; to turn it on, "
-                     + ("replace the argcshim line in" if r["stale"] else "add to")
-                     + " ~/.config/hypr/hyprland.lua, then hyprctl reload && omarchy restart shell:")
+        lines.append("--   HTML renderer built; add this PATH line to "
+                     "~/.config/hypr/hyprland.lua, then reload Hyprland and restart the shell:")
         lines.append("       " + r["line"])
     m = state["mailto"]
     lines.append(("ok   " if m["ok"] else "--   ") + "mailto: links open Olook"
@@ -2790,7 +2794,8 @@ def main(argv=None):
     os.umask(0o077)
     try:
         args.func(args)
-    except (CliError, config.ConfigError, mailbox.MailError, oauth.OAuthError,
+    except (CliError, config.ConfigError, keyring.SecretStorageError,
+            mailbox.MailError, oauth.OAuthError,
             send.SendError) as exc:
         fail(exc)
     except KeyboardInterrupt:

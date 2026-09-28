@@ -3,8 +3,9 @@
 Olook reads mail from strangers, so the parts that handle it are written to
 assume the worst: message HTML is rewritten and shown without JavaScript, no
 remote content loads until you allow it, links open only when they are web or
-mail links, and passwords and tokens stay in your keyring, never on a command
-line or in a log.
+mail links, and new passwords and tokens require the keyring, never a command
+line or a log. An older private `secrets.json` file may still be read for
+accounts created by previous versions; new secrets are never written there.
 
 ## Reporting a vulnerability
 

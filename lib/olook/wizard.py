@@ -117,7 +117,7 @@ def run_setup(args):
 
         try:
             oauth.authorize(entry, report)
-        except oauth.OAuthError as exc:
+        except (oauth.OAuthError, keyring.SecretStorageError) as exc:
             print(f"\nSign-in failed: {exc}")
             print("You can retry with: olook auth " + entry["id"])
             sys.exit(1)
@@ -126,7 +126,11 @@ def run_setup(args):
         if not password:
             print("No password given; run `olook auth " + entry["id"] + "` later.")
         else:
-            keyring.set_secret(entry["id"], "password", password)
+            try:
+                keyring.set_secret(entry["id"], "password", password)
+            except keyring.SecretStorageError as exc:
+                print(f"Could not save the password: {exc}")
+                sys.exit(1)
 
     print("\nTesting the connection…")
     try:

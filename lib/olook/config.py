@@ -184,21 +184,20 @@ def remove(account_id):
 
 # When a message's pictures may load without being asked.
 #
-#   verified  the server vouched for the sender, or you did
-#   trusted   only senders you put on the list yourself
+#   verified  the receiving server vouched for the sender's domain
+#   trusted   only named senders whose identity the server verified
 #   never     always ask
 #
-# "verified" is the default because a signed message is one whose sender is
-# known, and asking about every one of those was noise. It does mean a
-# tracking pixel in authenticated mail loads: signing proves who sent it, not
-# that they mean you well.
+# A valid signature does not mean the sender is known or welcome: even an
+# unsolicited sender can sign mail from their own domain. Start with no
+# automatic network requests; the other policies require an explicit choice.
 IMAGE_POLICIES = ("verified", "trusted", "never")
 
 
 def image_policy(doc=None):
     doc = doc if doc is not None else load()
-    value = str(doc.get("imagePolicy") or "verified").lower()
-    return value if value in IMAGE_POLICIES else "verified"
+    value = str(doc.get("imagePolicy") or "never").lower()
+    return value if value in IMAGE_POLICIES else "never"
 
 
 def set_image_policy(value):

@@ -1,9 +1,9 @@
 """Secret storage.
 
-Prefers the session keyring through `secret-tool` (gnome-keyring / KWallet via
-the Secret Service API, which Omarchy already runs for polkit and friends).
-Falls back to a 0600 JSON file under the state dir when no Secret Service is
-available — a headless box or a session where the keyring never unlocked.
+New secrets require the session keyring through `secret-tool` (gnome-keyring /
+KWallet via the Secret Service API). An older 0600 JSON fallback remains
+readable so accounts created by previous versions keep working, but a keyring
+failure must not silently put new passwords or tokens in that file.
 """
 
 import json
@@ -18,6 +18,10 @@ SERVICE = "olook"
 _FALLBACK = config.STATE_DIR / "secrets.json"
 
 
+class SecretStorageError(Exception):
+    pass
+
+
 def _secret_tool():
     return shutil.which("secret-tool")
 
@@ -28,18 +32,21 @@ def _attrs(account_id, kind):
 
 def set_secret(account_id, kind, value):
     tool = _secret_tool()
-    if tool:
-        label = f"Olook ({account_id}/{kind})"
-        try:
-            subprocess.run(
-                [tool, "store", "--label", label, *_attrs(account_id, kind)],
-                input=value, text=True, check=True, capture_output=True, timeout=30,
-            )
-            return "keyring"
-        except (OSError, subprocess.SubprocessError):
-            pass
-    _file_write(account_id, kind, value)
-    return "file"
+    if not tool:
+        raise SecretStorageError(
+            "No keyring helper (secret-tool) is available. Install or unlock "
+            "the Secret Service keyring, then try again; no secret was saved.")
+    label = f"Olook ({account_id}/{kind})"
+    try:
+        subprocess.run(
+            [tool, "store", "--label", label, *_attrs(account_id, kind)],
+            input=value, text=True, check=True, capture_output=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SecretStorageError(
+            "The keyring did not store this secret. Unlock or repair the "
+            "Secret Service keyring, then try again; no file fallback was used.") from exc
+    return "keyring"
 
 
 def get_secret(account_id, kind):
@@ -95,12 +102,6 @@ def _file_save(data):
         json.dump(data, handle)
     os.chmod(tmp, 0o600)
     os.replace(tmp, _FALLBACK)
-
-
-def _file_write(account_id, kind, value):
-    data = _file_load()
-    data[f"{account_id}/{kind}"] = value
-    _file_save(data)
 
 
 def _file_read(account_id, kind):

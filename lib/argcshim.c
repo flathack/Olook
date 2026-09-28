@@ -16,14 +16,16 @@
  * delegating gives Qt the program name — the only thing Chromium is asking for.
  * Everything else about the process is left alone.
  *
- * This is preloaded across the session, so it refuses to act anywhere but in
- * Quickshell, and only when argc really is 0. In every other process it is
- * dead weight and nothing more.
+ * The plugin's launch wrapper scopes the preload to Omarchy's shell. The
+ * launcher and systemd-cat also load it on their way to Quickshell, but this
+ * shim acts only in Quickshell, and only when argc really is 0. Quickshell
+ * removes this library from LD_PRELOAD before it starts plugin subprocesses.
  *
- * Built by install.sh; loaded by an LD_PRELOAD line in ~/.config/hypr/envs.conf.
+ * Built by Finish setup; loaded by bin/omarchy-launch-shell.
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -46,6 +48,30 @@ static int host_is_quickshell(void) {
   name = name ? name + 1 : path;
   cached = strcmp(name, "quickshell") == 0;
   return cached;
+}
+
+/* The host has loaded the shim already. Do not pass it on to processes that
+ * plugins start, while leaving any unrelated preloads in place. */
+__attribute__((constructor)) static void keep_preload_in_host(void) {
+  if (!host_is_quickshell()) return;
+  const char *current = getenv("LD_PRELOAD");
+  Dl_info self;
+  if (!current || !dladdr((void *)keep_preload_in_host, &self) ||
+      !self.dli_fname || strlen(current) > 8192) return;
+
+  char *copy = strdup(current);
+  if (!copy) return;
+  char kept[8193] = "";
+  char *cursor = NULL;
+  for (char *item = strtok_r(copy, " :\t\n", &cursor); item;
+       item = strtok_r(NULL, " :\t\n", &cursor)) {
+    if (strcmp(item, self.dli_fname) == 0) continue;
+    if (kept[0]) strcat(kept, ":");
+    strcat(kept, item);
+  }
+  if (kept[0]) setenv("LD_PRELOAD", kept, 1);
+  else unsetenv("LD_PRELOAD");
+  free(copy);
 }
 
 static void give_qt_a_program_name(int *argc, char **argv) {

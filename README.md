@@ -84,17 +84,20 @@ omarchy plugin add https://github.com/TiniTinyTerminator/Olook.git --enable
 Then open Olook, add an account, and go to **Settings → General → Finish
 setup**. It puts the `olook` command on your PATH, builds the small library
 that lets mail render as HTML, makes Olook the handler for `mailto:` links,
-and adds Olook to the app menu (with **New message** among its actions). The one step it leaves to you is the line that preloads that library
-into the shell: it shows the line, with a button to copy it into
-`~/.config/hypr/hyprland.lua`, because Olook does not edit Hyprland's config.
+and adds Olook to the app menu (with **New message** among its actions). The
+optional HTML renderer needs one line in `~/.config/hypr/hyprland.lua` to put
+Olook's shell launcher first on PATH. That launcher preloads the library in
+the Omarchy shell launch chain, rather than every session application.
+Finish setup shows the exact line. Reload Hyprland and restart the shell after
+adding it. Without the line, mail uses Qt's simpler rich-text renderer.
 From a terminal the same is `olook finish-setup`.
 
 Update with `omarchy plugin update ttt.olook`.
 
 Needs Python 3 (developed on 3.14) with nothing beyond the standard library.
-`secret-tool` (libsecret) keeps passwords and tokens in the keyring; without it
-they go to a file readable only by you. `gcc` builds the HTML renderer
-library; without it the reading pane falls back to Qt's rich text.
+`secret-tool` (libsecret) keeps passwords and tokens in the keyring; without a
+working keyring, adding credentials stops with an error. `gcc` builds the HTML
+renderer library; without it the reading pane falls back to Qt's rich text.
 
 **The clock and calendar** is a plugin of its own,
 [olook-calendar](https://github.com/TiniTinyTerminator/Olook-calendar):
@@ -115,6 +118,9 @@ cd olook
 
 `./install.sh --uninstall` removes it and leaves your accounts and cached mail
 alone.
+If you enabled the optional HTML renderer, also remove Olook's PATH line from
+`~/.config/hypr/hyprland.lua`. Older installs may have an `LD_PRELOAD` line
+containing `argcshim.so`; remove that too before uninstalling the plugin.
 
 **If you edit the plugin**, re-run `./install.sh` — it copies the changed files
 and asks the shell to rescan. The bar widget picks the change up immediately.
@@ -329,11 +335,13 @@ its own text colours.
 **Pictures.** A remote picture in mail is usually a tracking pixel, so none is
 fetched until something says it may be. Settings → General chooses what:
 
-- *When the sender is known* (the default): pictures load for mail your
-  provider verified as really coming from the address in its From line, and
-  for senders you have named.
-- *Only senders I have named*, with **Always from this sender** above a message.
-- *Never*: every message asks, with **Show images**.
+- *Never* (the default): every message asks, with **Show images**.
+- *Named and verified senders*: pictures load only for addresses you named
+  whose identity your provider verified. **Always from this sender** adds an
+  address to the list; unauthenticated messages still ask.
+- *Any verified sender* (opt-in): pictures load for mail your provider
+  verified as coming from its From domain. Unfamiliar senders can sign their
+  own mail, so this may reveal when you open it.
 
 **Who sent it.** Under the sender's name, *Verified as example.com* means your
 provider checked the message's DKIM or DMARC and it passed for the From
@@ -421,8 +429,9 @@ removes them.
 | `~/.cache/olook/attachments/inline/` | Images a message carries, extracted so the reading pane can show them |
 | system keyring | Passwords and OAuth refresh tokens (`secret-tool`, service `olook`) |
 
-Secrets go to the Secret Service keyring. If no keyring is available, they fall
-back to `~/.local/state/olook/secrets.json` with 0600 permissions. All three
+New secrets require the Secret Service keyring. Older installs may still have
+`~/.local/state/olook/secrets.json`; Olook reads that 0600 file for existing
+accounts but does not write new secrets to it. All three
 folders are private to you (0700). Olook never takes a password or secret as a
 command-line argument, where other programs could read it: the `olook`
 commands read them from stdin.

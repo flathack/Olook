@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Put the Qt argument shim only in the Omarchy shell's launch environment.
+set -euo pipefail
+
+plugin_bin="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+shim="$(cd -- "$plugin_bin/../lib" && pwd -P)/argcshim.so"
+stock="${OMARCHY_PATH:-/usr/share/omarchy}/bin/omarchy-launch-shell"
+
+if [[ -f "$shim" ]]; then
+  export LD_PRELOAD="$shim${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+exec "$stock" "$@"

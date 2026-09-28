@@ -1062,7 +1062,7 @@ Item {
   // When pictures in a message may load without being asked:
   // verified | trusted | never. Kept by the engine so the terminal and the
   // client cannot disagree about it.
-  property string imagePolicy: "verified"
+  property string imagePolicy: "never"
 
   function loadImagePolicy() {
     run(["images"], function (ok, payload) {

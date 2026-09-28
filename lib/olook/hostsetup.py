@@ -7,9 +7,9 @@ the reading pane render HTML, being the desktop's handler for mailto: links,
 and an entry in the app menu. This does all four, from Settings or from
 install.sh, and reports what it found either way.
 
-The one step it will not take is editing Hyprland's config: the renderer only
-works when the shell starts with the library preloaded, and that line belongs
-to the user. It is handed back to be added by hand.
+The one step it will not take is editing Hyprland's config: the renderer needs
+the plugin's shell launcher first on PATH, so the preload stays in the Omarchy
+shell launch chain. That line belongs to the user and is handed back to add.
 """
 
 import hashlib
@@ -26,6 +26,7 @@ PLUGIN_DIR = Path(__file__).resolve().parents[2]
 ENGINE = PLUGIN_DIR / "bin" / "olook"
 SHIM_SOURCE = PLUGIN_DIR / "lib" / "argcshim.c"
 SHIM = PLUGIN_DIR / "lib" / "argcshim.so"
+SHELL_LAUNCHER = PLUGIN_DIR / "bin" / "omarchy-launch-shell"
 
 HOME = Path.home()
 BIN_LINK = HOME / ".local" / "bin" / "olook"
@@ -56,12 +57,12 @@ def _mailto_default():
     return done.stdout.strip()
 
 
-def _shell_preload():
-    """LD_PRELOAD as the running Omarchy shell has it.
+def _shell_has_shim():
+    """Whether the running Omarchy shell has mapped this shim.
 
-    Read from the shell's own process, not from whoever runs this: from a
-    terminal started before a change, or from install.sh, the caller's
-    environment says nothing about what the shell loaded.
+    The shim removes itself from LD_PRELOAD after loading, so children do not
+    inherit it. The process mappings, rather than a caller's environment,
+    answer whether the shell really loaded the library.
     """
     for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
@@ -71,20 +72,22 @@ def _shell_preload():
                 continue
             if (entry / "environ").stat().st_uid != os.getuid():
                 continue
-            for item in (entry / "environ").read_bytes().split(b"\0"):
-                if item.startswith(b"LD_PRELOAD="):
-                    return item[len(b"LD_PRELOAD="):].decode("utf-8", "replace")
-            return ""
+            shell_dir = str(Path(os.environ.get("OMARCHY_PATH", "/usr/share/omarchy")) / "shell")
+            if shell_dir.encode() not in (entry / "cmdline").read_bytes():
+                continue
+            return str(SHIM) in (entry / "maps").read_text(errors="replace")
         except OSError:
             continue
-    return os.environ.get("LD_PRELOAD", "")
+    return False
 
 
 def check():
     """Where each part stands, without changing anything."""
     hypr = _hypr_text()
-    line = f'hl.env("LD_PRELOAD", "{SHIM}")'
-    preload = _shell_preload()
+    line = ('hl.env("PATH", ' + json.dumps(str(SHELL_LAUNCHER.parent) + ":")
+            + ' .. (os.getenv("OMARCHY_PATH") or "/usr/share/omarchy")'
+            + ' .. "/bin:" .. (os.getenv("PATH") or "/usr/local/bin:/usr/bin"))')
+    legacy = "argcshim.so" in hypr and "LD_PRELOAD" in hypr
     return {
         "cli": {
             "ok": _bin_is_ours() and BIN_LINK.resolve() == ENGINE.resolve(),
@@ -92,12 +95,11 @@ def check():
         },
         "renderer": {
             "built": SHIM.exists(),
-            "active": str(SHIM) in preload,
-            "configured": str(SHIM) in hypr,
-            # A line for another copy of the library, left by an earlier
-            # install or a renamed plugin.
-            "stale": "argcshim.so" in hypr and str(SHIM) not in hypr,
+            "active": _shell_has_shim(),
+            "configured": line in hypr and SHELL_LAUNCHER.is_file(),
+            "stale": legacy,
             "line": line,
+            "launcher": str(SHELL_LAUNCHER),
             "compiler": bool(shutil.which("gcc")),
         },
         "mailto": {
@@ -349,5 +351,12 @@ def remove():
         trouble = _unplace(path, data, *legacy)
         if trouble:
             problems.append(trouble)
+    renderer = check()["renderer"]
+    if renderer["stale"]:
+        problems.append("remove the old LD_PRELOAD line containing argcshim.so "
+                        "from ~/.config/hypr/hyprland.lua")
+    if renderer["configured"]:
+        problems.append("remove Olook's PATH line from "
+                        "~/.config/hypr/hyprland.lua")
     _refresh_desktop_database()
     return problems
