@@ -5,10 +5,9 @@ import qs.Commons
 import qs.Ui
 import "Model.js" as Model
 
-// The full mail client: a fullscreen layer-shell overlay laid out the way
+// The full mail client: a toplevel window laid out the way
 // Outlook lays out its window — app rail, folder pane, message list, reading
-// pane — using the Omarchy theme's own colors so it belongs to the desktop
-// rather than imitating Windows chrome.
+// pane — with neutral reading surfaces and the Omarchy theme's accent.
 Item {
   id: root
 
@@ -880,16 +879,52 @@ Item {
 
   QtObject {
     id: ui
-    readonly property color background: Color.menu.background
-    readonly property color surface: Qt.lighter(Color.menu.background, 1.14)
-    readonly property color foreground: Color.menu.text
-    readonly property color dim: Qt.darker(Color.menu.text, 1.55)
-    readonly property color faint: Qt.darker(Color.menu.text, 2.2)
-    readonly property color accent: Color.accent
-    readonly property color urgent: Color.urgent
-    readonly property color border: Util.alpha(Color.menu.text, 0.14)
-    readonly property color hover: Util.alpha(Color.menu.text, 0.07)
-    readonly property color selected: Util.alpha(Color.accent, 0.16)
+    // Menu colors can be strongly tinted, and darkening a tinted text color
+    // makes secondary labels almost disappear. Mail needs large, quiet areas
+    // that stay readable when the desktop theme changes.
+    function linear(value) {
+      return value <= 0.04045 ? value / 12.92
+        : Math.pow((value + 0.055) / 1.055, 2.4)
+    }
+    function luminance(color) {
+      return 0.2126 * linear(color.r) + 0.7152 * linear(color.g)
+        + 0.0722 * linear(color.b)
+    }
+    function contrast(first, second) {
+      var a = luminance(first)
+      var b = luminance(second)
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+    }
+    function readableAccent(source) {
+      function readable(color) {
+        return Math.min(contrast(color, background), contrast(color, surface)) >= 4.5
+      }
+      if (readable(source)) return source
+      var low = 0
+      var high = 1
+      for (var i = 0; i < 12; i++) {
+        var middle = (low + high) / 2
+        var candidate = Qt.rgba(source.r + (foreground.r - source.r) * middle,
+                                source.g + (foreground.g - source.g) * middle,
+                                source.b + (foreground.b - source.b) * middle, 1)
+        if (readable(candidate)) high = middle
+        else low = middle
+      }
+      return Qt.rgba(source.r + (foreground.r - source.r) * high,
+                     source.g + (foreground.g - source.g) * high,
+                     source.b + (foreground.b - source.b) * high, 1)
+    }
+    readonly property bool lightTheme: luminance(Color.background) > 0.5
+    readonly property color background: lightTheme ? "#f4f6f8" : "#15191e"
+    readonly property color surface: lightTheme ? "#ffffff" : "#232930"
+    readonly property color foreground: lightTheme ? "#20252b" : "#e9edf1"
+    readonly property color dim: lightTheme ? "#46515c" : "#bdc5cd"
+    readonly property color faint: lightTheme ? "#5c6772" : "#a3aeb8"
+    readonly property color accent: readableAccent(Color.accent)
+    readonly property color urgent: readableAccent(Color.urgent)
+    readonly property color border: Util.alpha(foreground, 0.16)
+    readonly property color hover: Util.alpha(foreground, 0.08)
+    readonly property color selected: Util.alpha(accent, 0.17)
     readonly property string fontFamily: Style.font.menuFamily
     readonly property int radius: Style.cornerRadius
 
