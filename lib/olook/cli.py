@@ -494,11 +494,15 @@ def cmd_folders(args):
         with mailbox.Session(account) as session:
             folders = session.list_folders()
             counts = session.status_all(folder["name"] for folder in folders)
+            known = {f["name"]: f for f in store.list_folders(conn, account["id"])}
             enriched = []
             for folder in folders:
                 info = {"name": folder["name"], "delimiter": folder["delimiter"],
                         "special": folder["special"]}
-                info.update(counts.get(folder["name"], {}))
+                previous = known.get(folder["name"]) or {}
+                info.update(counts.get(folder["name"]) or {
+                    key: previous.get(key, 0)
+                    for key in ("total", "unseen", "uidnext", "uidvalidity")})
                 enriched.append(info)
             store.save_folders(conn, account["id"], enriched)
     emit({"ok": True, "account": account["id"],
@@ -564,6 +568,37 @@ def _prefetch_bodies(session, conn, account, folder, count):
         return 0
 
 
+def _label_folders(names):
+    """Proton's labels, as Bridge lists them: everything under Labels/."""
+    return [n for n in names if str(n).startswith("Labels/")]
+
+
+def _refresh_labels(session, conn, folders, counts, known, done):
+    """Bring label folders up to date when the server says they changed.
+
+    A Proton label is a second copy of the message in Labels/<name>, and the
+    list shows a message's labels by finding those copies -- so they have to
+    be fetched, or a label put on or taken off in the webmail never shows.
+    Only labels whose counts moved are fetched, and rules never run on them:
+    a label is the same mail again, not new mail.
+    """
+    refreshed = 0
+    for name in _label_folders(f["name"] for f in folders):
+        if name == done:
+            continue
+        now = counts.get(name) or {}
+        before = known.get(name) or {}
+        fetched = store.folder_state(conn, session.account["id"], name) != (0, 0)
+        if fetched and all(now.get(k) == before.get(k) for k in ("total", "uidnext", "uidvalidity")):
+            continue
+        try:
+            mailbox.sync_folder(session, conn, name, limit=200, apply_rules=False)
+            refreshed += 1
+        except (mailbox.MailError, imaplib.IMAP4.error):
+            continue
+    return refreshed
+
+
 def cmd_sync(args):
     targets = ([config.account(args.account)] if args.account
                else [a for a in config.accounts() if a["enabled"]])
@@ -589,19 +624,29 @@ def cmd_sync(args):
                 # Folder pane counts come from STATUS, fetched for every folder
                 # at once where the server allows it.
                 counts = session.status_all(entry["name"] for entry in folders)
+                # A folder the server would not count this time is still a
+                # folder: listed with the counts it had, not dropped. Leaving
+                # it out left an account showing only its Inbox (#1).
+                known = {f["name"]: f for f in store.list_folders(conn, account["id"])}
                 enriched = []
                 for entry in folders:
-                    if entry["name"] not in counts:
-                        continue
                     info = dict(entry)
-                    info.update(counts[entry["name"]])
+                    previous = known.get(entry["name"]) or {}
+                    info.update(counts.get(entry["name"]) or {
+                        key: previous.get(key, 0)
+                        for key in ("total", "unseen", "uidnext", "uidvalidity")})
                     enriched.append(info)
                 if enriched:
                     store.save_folders(conn, account["id"], enriched)
+                summary["labelsRefreshed"] = _refresh_labels(
+                    session, conn, folders, counts, known, folder)
                 summary["account"] = account["id"]
                 summary["ok"] = True
                 results.append(summary)
-        except (mailbox.MailError, oauth.OAuthError, config.ConfigError) as exc:
+        except (mailbox.MailError, oauth.OAuthError, config.ConfigError,
+                imaplib.IMAP4.error, OSError) as exc:
+            # A protocol error from one account's server is that account's
+            # failure, reported; it must not end the sync of the others.
             results.append({"ok": False, "account": account["id"], "error": str(exc)})
 
     store.set_state(conn, "last_sync", int(time.time()))
@@ -631,8 +676,13 @@ def cmd_list(args):
         conn, account["id"], folder=folder, limit=args.limit, offset=args.offset,
         unread_only=args.unread, flagged_only=args.flagged,
         query=args.query or "", sort=args.sort)
+    store.attach_labels(conn, account["id"], messages)
     if args.conversations:
-        messages = store.as_conversations(messages)
+        # Your replies live in Sent; a conversation elsewhere includes them.
+        sent = _role_folder(conn, account, "sent")
+        related = [] if not sent or sent == folder else store.list_messages(
+            conn, account["id"], folder=sent, limit=500)
+        messages = store.as_conversations(messages, related)
     emit({"ok": True, "account": account["id"], "folder": folder or "",
           "messages": messages, "count": len(messages)},
          lambda d: "\n".join(
@@ -658,6 +708,9 @@ def cmd_list_all(args, conn):
         conn, pairs, limit=args.limit, offset=args.offset,
         unread_only=args.unread, flagged_only=args.flagged,
         query=args.query or "", sort=args.sort)
+    for account_id, _ in pairs:
+        store.attach_labels(conn, account_id,
+                            [m for m in messages if m.get("account") == account_id])
     if args.conversations:
         messages = store.as_conversations(messages)
     emit({"ok": True, "account": "", "folder": ALL_FOLDER,
@@ -676,9 +729,13 @@ def _inbox_folder(conn, account):
 
 
 def _role_folder(conn, account, role):
-    for entry in store.list_folders(conn, account["id"]):
-        if entry["special"] == role or (role == "archive" and entry["special"] == "all"):
-            return entry["name"]
+    # All Mail stands in for Archive only where there is no Archive (Gmail);
+    # see Session.resolve_role.
+    folders = store.list_folders(conn, account["id"])
+    for wanted in ((role, "all") if role == "archive" else (role,)):
+        for entry in folders:
+            if entry["special"] == wanted:
+                return entry["name"]
     return (account.get("folders") or {}).get(role, role)
 
 
@@ -1349,6 +1406,8 @@ def cmd_body(args):
         _mark_seen(account, conn, folder, [args.uid], True)
 
     summary = store.get_message(conn, account["id"], folder, args.uid) or {}
+    if summary:
+        store.attach_labels(conn, account["id"], [summary])
     emit({"ok": True, "message": summary,
           "body": _body_payload(cached, summary, args.remote_images)},
          lambda d: f"{d['message'].get('subject','')}\n"

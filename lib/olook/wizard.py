@@ -26,10 +26,15 @@ def _input(prompt, placeholder="", password=False):
         if done.returncode != 0:
             raise KeyboardInterrupt
         return done.stdout.strip()
+    # Without gum the answer is read here, with the placeholder spelled out in
+    # the label the same way gum would have shown it.
+    label = prompt + " "
+    if placeholder:
+        label += "(" + placeholder + ") "
     if password:
         import getpass
-        return getpass.getpass(prompt + " ")
-    return input(prompt + " ").strip()
+        return getpass.getpass(label)
+    return input(label).strip()
 
 
 def _confirm(question, default=True):

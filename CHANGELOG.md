@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.2.6
+
+Proton Mail, from the reports on #1:
+
+- Proton labels show on messages, in the list and above a message: a label
+  is a copy of the message in Labels/<name>, so the labels whose contents
+  changed are fetched along with the inbox, and only those.
+- A label taken off in the webmail goes in Olook too. A sync dropped
+  removed messages only above the oldest one it looked at, so the oldest of
+  a short folder stayed forever; and the window fetched a folder only once
+  per session, and not at all while its inbox watcher ran.
+- A sent message shows in Sent: Sent is fetched again after sending.
+- Conversations (View → Conversations) include the replies you sent, from
+  Sent, in the conversation they answer.
+
+## 1.2.5
+
+- Settings → **Bar widget** and **Calendar** change the bar widgets'
+  settings: how often to check for mail, notifications, the badge, and for
+  Olook Calendar the clock format, agenda length and reminders. Omarchy no
+  longer has a settings page for a plugin, so these were out of reach; they
+  are read live from Omarchy's shell.json and saved with `omarchy bar set`.
+- A summon can open a page of Settings: `{"view":"settings","section":"calendar"}`.
+- Sync keeps a folder the server would not count this time instead of
+  dropping it, and a server error on one account no longer ends the sync of
+  the others (#1).
+
+## 1.2.4
+
+- Folders are shown as a tree: subfolders indented under their parent,
+  for every IMAP account.
+- Proton Mail's folders and labels are kept apart, under **Folders** and
+  **Labels** headings, instead of mixed at the top; labels have a tag icon.
+  ([#1](https://github.com/TiniTinyTerminator/Olook/issues/1))
+- All Mail is called All Mail where there is also an Archive, and Archive
+  moves mail into the Archive -- on Proton it could pick All Mail, where a
+  moved message goes nowhere. Gmail, which has no Archive, still archives
+  into All Mail.
+- Starred and Important sit with the other system folders.
+- `olook setup` no longer crashes at the first question with gum 2.0, and
+  Settings opens it in your own terminal, not always Alacritty (thanks
+  @nagualcode, #2 and #3).
+
 ## 1.2.3
 
 - Proton Mail works: Bridge signs its own certificate, which the ordinary

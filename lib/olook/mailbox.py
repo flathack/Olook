@@ -391,7 +391,13 @@ class Session:
         return folders
 
     def status(self, folder):
-        result = self.imap.status(quote(folder), "(MESSAGES UNSEEN UIDNEXT UIDVALIDITY)")
+        # imaplib raises on a BAD reply rather than returning it; a folder the
+        # server will not count (Bridge mid-sync, an odd name) is a MailError
+        # like any other refusal, so one folder cannot end the whole sync.
+        try:
+            result = self.imap.status(quote(folder), "(MESSAGES UNSEEN UIDNEXT UIDVALIDITY)")
+        except imaplib.IMAP4.error as exc:
+            raise MailError(f"Could not read status of {folder}: {exc}") from exc
         data = self._ok(result, f"Could not read status of {folder}")
         blob = b" ".join(x for x in data if isinstance(x, bytes))
         def field(key):
@@ -483,12 +489,13 @@ class Session:
         if role in ("", "inbox"):
             return "INBOX"
         folders = folders if folders is not None else self.list_folders()
-        wanted = {role}
-        if role == "archive":
-            wanted.add("all")  # Gmail archives into All Mail
-        for entry in folders:
-            if entry.get("special") in wanted:
-                return entry["name"]
+        # Gmail archives into All Mail, having no Archive; Proton has both,
+        # and a message "moved" into its All Mail goes nowhere. So All Mail
+        # only when there is no Archive, whichever the server lists first.
+        for wanted in ((role, "all") if role == "archive" else (role,)):
+            for entry in folders:
+                if entry.get("special") == wanted:
+                    return entry["name"]
         configured = (self.account.get("folders") or {}).get(role)
         if configured:
             for entry in folders:
@@ -837,7 +844,7 @@ def folder_kind(name):
     return "other" if head in NON_MAIL_FOLDERS else "mail"
 
 
-def sync_folder(session, conn, folder, limit=200, full=False):
+def sync_folder(session, conn, folder, limit=200, full=False, apply_rules=True):
     """Bring one folder's cached headers in line with the server."""
     account_id = session.account["id"]
     info = session.status(folder)
@@ -853,8 +860,11 @@ def sync_folder(session, conn, folder, limit=200, full=False):
 
     gone = cached - set(server_uids)
     # Only prune inside the window we actually looked at, so a limited sync
-    # never deletes older cached mail it simply didn't ask about.
-    if server_uids:
+    # never deletes older cached mail it simply didn't ask about. When the
+    # server has fewer messages than the limit, the window is the whole
+    # folder: the oldest message taken out of a label (Proton) was kept
+    # forever because it sat below the window's floor.
+    if server_uids and limit and len(server_uids) >= limit:
         window_floor = min(server_uids)
         gone = {uid for uid in gone if uid >= window_floor}
     if gone:
@@ -873,7 +883,7 @@ def sync_folder(session, conn, folder, limit=200, full=False):
     # already sitting there: a rule written today should not reorganise a
     # mailbox behind your back.
     applied = []
-    if arrived:
+    if arrived and apply_rules:
         wanted = rules.load(config.load())
         if wanted:
             applied = rules.apply(conn, session, account_id, folder,
