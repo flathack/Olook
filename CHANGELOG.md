@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add message context menus to the client, reader and bar, plus a bar-icon menu.
+- Enlarge reader actions to 40px with readable labels and at least 44px targets.
 
 ## 1.2.6
 

@@ -744,7 +744,7 @@ Item {
     default property alias segments: segmentRow.data
 
     width: segmentRow.implicitWidth
-    height: Style.space(22)
+    height: Style.space(40)
     radius: ui.radius
     color: "transparent"
     border.width: 1
@@ -765,8 +765,8 @@ Item {
     property bool highlighted: false
     signal triggered()
 
-    width: segmentContent.implicitWidth + Style.space(root.compact ? 10 : 12)
-    height: parent ? parent.height : Style.space(22)
+    width: Math.max(Style.space(44), segmentContent.implicitWidth + Style.space(24))
+    height: parent ? parent.height : Style.space(40)
     color: segmentHover.containsMouse ? ui.hover : "transparent"
 
     // A divider on the leading edge of every button but the first, which is
@@ -791,7 +791,7 @@ Item {
         text: segment.glyph
         color: segment.highlighted ? ui.urgent : ui.dim
         font.family: ui.fontFamily
-        font.pixelSize: Style.font.iconSmall
+        font.pixelSize: Math.max(18, Style.font.icon)
       }
 
       Text {
@@ -801,7 +801,7 @@ Item {
         text: segment.label
         color: ui.foreground
         font.family: ui.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: Math.max(14, Style.font.body)
       }
     }
 
@@ -842,7 +842,7 @@ Item {
         text: "󰏢"
         color: ui.dim
         font.family: ui.fontFamily
-        font.pixelSize: Style.font.iconSmall
+        font.pixelSize: Math.max(18, Style.font.icon)
       }
 
       Text {
@@ -851,7 +851,7 @@ Item {
         text: chip.part ? String(chip.part.filename || "attachment") : ""
         color: ui.foreground
         font.family: ui.fontFamily
-        font.pixelSize: Style.font.bodySmall
+        font.pixelSize: Math.max(14, Style.font.body)
       }
 
       Text {
@@ -860,7 +860,7 @@ Item {
         text: chip.part ? Model.fileSize(chip.part.size) : ""
         color: ui.faint
         font.family: ui.fontFamily
-        font.pixelSize: Style.font.caption
+        font.pixelSize: Math.max(14, Style.font.body)
       }
     }
 
