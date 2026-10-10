@@ -132,6 +132,13 @@ Item {
       return
     }
 
+    if (payload.uid && ["reply", "reply-all", "forward"].indexOf(payload.action) >= 0) {
+      root.opened = true
+      mail.buildDraft({ account: payload.account, folder: payload.folder, uid: Number(payload.uid) },
+                      payload.action, function (draft) { root.startCompose(draft) })
+      return
+    }
+
     root.opened = true
     // The rail's views are all summonable, so a keybinding can open the
     // calendar or the address book directly.
@@ -1255,6 +1262,23 @@ Item {
               MailList {
                 id: messageList
                 selectedKeys: root.selectionKeys
+                onContextRequested: function (entry, action) {
+                  if (action === "open") { mail.openMessage(entry); root.pane = "reader"; return }
+                  if (action === "reply" || action === "reply-all" || action === "forward") {
+                    mail.buildDraft(entry, action, function (draft) { root.startCompose(draft) })
+                    return
+                  }
+                  var picked = root.selectionKeys.indexOf(root.rowKey(entry)) >= 0
+                    ? root.selection.slice() : [entry]
+                  if (action === "delete") mail.removeMany(picked)
+                  else if (action === "archive") mail.moveMany(picked, "archive")
+                  else if (action.indexOf("move:") === 0) mail.moveMany(picked.filter(function (row) {
+                    return row.account === entry.account
+                  }), action.slice(5))
+                  else if (action === "read") mail.setFlagMany(picked, entry.seen ? "unseen" : "seen")
+                  else if (action === "flag") mail.setFlagMany(picked, entry.flagged ? "unflagged" : "flagged")
+                  root.clearSelection()
+                }
                 onRowToggled: function (index) { root.toggleSelection(index) }
                 onRowRanged: function (index) { root.selectRange(index) }
                 onSelectionCleared: root.clearSelection()

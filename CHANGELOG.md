@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add message context menus to the client, reader and bar, plus a bar-icon menu.
+
 ## 1.2.6
 
 Proton Mail, from the reports on #1:

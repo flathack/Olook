@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -284,6 +285,16 @@ Panel {
     function compose(): string { root.compose(); return "ok" }
   }
 
+  Menu {
+    id: barMenu
+    popupType: Popup.Window
+    parent: button
+    MenuItem { text: "Open Olook"; onTriggered: root.openWindow({}) }
+    MenuItem { text: "New message"; onTriggered: root.compose() }
+    MenuItem { text: "Check for mail"; onTriggered: mail.sync(false) }
+    MenuItem { text: "Settings"; onTriggered: root.openWindow({ view: "settings" }) }
+  }
+
   BarIconButton {
     id: button
     anchors.fill: parent
@@ -339,7 +350,7 @@ Panel {
       }
     }
     onPressed: function (buttonCode) {
-      if (buttonCode === Qt.RightButton) mail.sync(false)
+      if (buttonCode === Qt.RightButton) barMenu.popup()
       else if (buttonCode === Qt.MiddleButton) root.compose()
       else root.toggle()
     }
@@ -701,6 +712,24 @@ Panel {
     foreground: root.foreground
     implicitHeight: rowContent.implicitHeight + Style.spacing.rowPaddingX
 
+    MailContextMenu {
+      id: messageMenu
+      message: messageRow.message
+      service: mail
+      onRequested: function (action) {
+        var entry = messageRow.message
+        if (!entry) return
+        if (action === "open") root.openMessage(entry)
+        else if (action === "reply" || action === "reply-all" || action === "forward")
+          root.openWindow({ account: entry.account, folder: entry.folder, uid: entry.uid, action: action })
+        else if (action === "delete") mail.remove(entry)
+        else if (action === "archive") mail.archive(entry)
+        else if (action === "read") mail.toggleRead(entry)
+        else if (action === "flag") mail.toggleFlagged(entry)
+        else if (action.indexOf("move:") === 0) mail.moveTo(entry, action.slice(5))
+      }
+    }
+
     MouseArea {
       anchors.fill: parent
       hoverEnabled: true
@@ -712,7 +741,7 @@ Panel {
         root.messageIndex = messageRow.rowIndex
       }
       onClicked: function (mouse) {
-        if (mouse.button === Qt.RightButton) mail.toggleRead(messageRow.message)
+        if (mouse.button === Qt.RightButton) messageMenu.popup(parent, mouse.x, mouse.y)
         else root.openMessage(messageRow.message)
       }
     }

@@ -84,6 +84,29 @@ Item {
     root.remoteImages = false
   }
 
+  MailContextMenu {
+    id: readerMenu
+    message: root.message
+    service: root.service
+    onRequested: function (action) {
+      if (action === "reply" || action === "reply-all" || action === "forward") root.replyRequested(action)
+      else if (action === "delete") root.deleteRequested()
+      else if (action === "archive") root.archiveRequested()
+      else if (action === "read") root.unreadRequested()
+      else if (action === "flag") root.flagRequested()
+      else if (action.indexOf("move:") === 0 && root.service) root.service.moveTo(root.message, action.slice(5))
+    }
+  }
+
+  MouseArea {
+    anchors.fill: parent
+    z: 100
+    acceptedButtons: Qt.RightButton
+    onClicked: function (mouse) {
+      if (root.message) readerMenu.popup(root, mouse.x, mouse.y)
+    }
+  }
+
   Rectangle {
     anchors.fill: parent
     color: ui.background

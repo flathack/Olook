@@ -480,6 +480,12 @@ is not taken on trust.
 **Sync is slow the first time** — the initial pass fetches headers for the last
 200 messages. Later syncs only fetch what is new.
 
+## Regression checks
+
+`tests/ui/run.sh` opens a fixture window to exercise message context menus.
+It requires an Omarchy Wayland session and QtTest; no real accounts or mail
+are read or changed.
+
 ## Licence
 
 MIT.

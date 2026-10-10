@@ -19,6 +19,7 @@ Item {
   // line down the right-hand side would be drawing a border to nowhere.
   property bool edge: true
 
+  signal contextRequested(var entry, string action)
   signal rowChosen(int index)
   signal rowToggled(int index)
   signal rowRanged(int index)
@@ -44,6 +45,12 @@ Item {
   }
 
   onSelectedRowChanged: positionAt(selectedRow)
+
+  MailContextMenu {
+    id: contextMenu
+    service: root.service
+    onRequested: function (action) { root.contextRequested(message, action) }
+  }
 
   Rectangle {
     anchors.fill: parent
@@ -403,7 +410,8 @@ Item {
               acceptedButtons: Qt.LeftButton | Qt.RightButton
               onClicked: function (mouse) {
                 if (mouse.button === Qt.RightButton) {
-                  if (root.service) root.service.toggleRead(rowItem.modelData)
+                  contextMenu.message = rowItem.modelData
+                  contextMenu.popup(rowHover, mouse.x, mouse.y)
                 } else if (mouse.modifiers & Qt.ControlModifier) {
                   root.rowToggled(rowItem.index)
                 } else if (mouse.modifiers & Qt.ShiftModifier) {
