@@ -485,7 +485,7 @@ is not taken on trust.
 `python -m unittest discover -s tests -v` checks the privacy decisions.
 `tests/service/run.sh` runs six mail-state scenarios in Quickshell with all
 engine calls intercepted. `tests/ui/run.sh` opens a fixture window to exercise
-message context menus. The UI check requires an Omarchy Wayland session and
+message context menus and single/bulk mouse dragging. The UI check requires an Omarchy Wayland session and
 QtTest. Neither check reads real accounts or changes mail.
 
 ## Licence

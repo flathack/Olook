@@ -545,7 +545,7 @@ Item {
 
     height: Style.space(26)
     radius: ui.radius
-    color: folderRow.current ? ui.selected
+    color: mailDrop.containsDrag ? ui.hover : folderRow.current ? ui.selected
       : (folderHover.containsMouse ? ui.hover : "transparent")
 
     // Subfolders indented under their parent.
@@ -634,7 +634,24 @@ Item {
     }
 
     DropArea {
+      id: mailDrop
       anchors.fill: parent
+      function accepts(source) {
+        if (!source || !source.entries || !source.entries.length
+            || folderRow.isAll || folderRow.heading || !folderRow.folder) return false
+        return source.entries.every(function (entry) {
+          return entry.account === folderRow.accountId && entry.folder !== folderRow.folder.name
+        })
+      }
+      onEntered: function (drag) {
+        if (drag.keys.indexOf("olook-mails") >= 0) drag.accepted = accepts(drag.source)
+      }
+      onDropped: function (drop) {
+        if (drop.keys.indexOf("olook-mails") < 0 || !accepts(drop.source)) return
+        if (!root.service) return
+        root.service.moveMany(drop.source.entries.slice(), folderRow.folder.name)
+        drop.accept(Qt.MoveAction)
+      }
       onPositionChanged: {
         // A folder may only move within the account it belongs to, so a
         // drop area in another account refuses the carried row.

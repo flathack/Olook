@@ -4,6 +4,7 @@
 
 - Add message context menus to the client, reader and bar, plus a bar-icon menu.
 - Enlarge reader actions to 40px with readable labels and at least 44px targets.
+- Move individual or selected messages into folders by dragging; refuse other accounts and the source folder.
 - Prevent late list/body responses from resurrecting deleted mail or replacing a different message. Restore rows on failed moves/deletions.
 
 ## 1.2.6

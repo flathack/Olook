@@ -1262,6 +1262,7 @@ Item {
               MailList {
                 id: messageList
                 selectedKeys: root.selectionKeys
+                dragEntries: root.selection
                 onContextRequested: function (entry, action) {
                   if (action === "open") { mail.openMessage(entry); root.pane = "reader"; return }
                   if (action === "reply" || action === "reply-all" || action === "forward") {

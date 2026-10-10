@@ -65,6 +65,14 @@ ShellRoot {
           }
           return null
         }
+        function findDrop(item) {
+          if (typeof item.accepts === "function") return item
+          var children = item.children || []
+          for (var i = 0; i < children.length; i++) {
+            var found = findDrop(children[i]); if (found) return found
+          }
+          return null
+        }
         function test_interactions() {
           wait(500)
           mouseClick(list, 100, 70, Qt.LeftButton)
@@ -76,7 +84,33 @@ ShellRoot {
           assertEqual(move.count, 1, "line 103: compare(move.count, 1)")
           assertEqual(move.itemAt(0).text, "Archive", "line 104: compare(move.itemAt(0).text, \"Archive\")")
           menu.close()
-          console.log("OLOOK_INTERACTION_TESTS_PASS: context menu")
+          var folder = findFolder(folders)
+          assertTrue(folder !== null, "line 107: verify(folder !== null)")
+          var drop = findDrop(folder)
+          assertTrue(drop !== null, "line 109: verify(drop !== null)")
+          assertTrue(!drop.accepts({entries:[{account:"other",folder:"INBOX",uid:1}]}), "line 110: verify(!drop.accepts({entries:[{account:\"other\",folder:\"INBOX\",uid:1}]}))")
+          assertTrue(!drop.accepts({entries:[{account:"qa",folder:"Archive",uid:1}]}), "line 111: verify(!drop.accepts({entries:[{account:\"qa\",folder:\"Archive\",uid:1}]}))")
+          assertTrue(!drop.accepts({entries:[list.rows[0],{account:"other",folder:"INBOX",uid:1}]}), "line 112: verify(!drop.accepts({entries:[list.rows[0],{account:\"other\",folder:\"INBOX\",uid:1}]}))")
+          var target = folder.mapToItem(list, folder.width/2, folder.height/2)
+          mousePress(list, 100, 70, Qt.LeftButton)
+          mouseMove(list, 120, 70, 80)
+          mouseMove(list, target.x, target.y, 150)
+          wait(100)
+          mouseRelease(list, target.x, target.y, Qt.LeftButton)
+          wait(100)
+          assertEqual(service.moved.length, 1, "line 120: compare(service.moved.length, 1)")
+          assertEqual(service.moved[0].target, "Archive", "line 121: compare(service.moved[0].target, \"Archive\")")
+          service.moved = []
+          list.selectedKeys = ["qa|INBOX|1"]
+          list.dragEntries = [list.rows[0], {account:"qa",folder:"INBOX",uid:2}]
+          mousePress(list, 100, 70, Qt.LeftButton)
+          mouseMove(list, 120, 70, 80)
+          mouseMove(list, target.x, target.y, 150)
+          mouseRelease(list, target.x, target.y, Qt.LeftButton)
+          wait(100)
+          assertEqual(service.moved.length, 1, "line 130: compare(service.moved.length, 1)")
+          assertEqual(service.moved[0].entries.length, 2, "line 131: compare(service.moved[0].entries.length, 2)")
+          console.log("OLOOK_INTERACTION_TESTS_PASS: menu, single/bulk drag")
         }
       }
     }

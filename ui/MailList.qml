@@ -19,6 +19,7 @@ Item {
   // line down the right-hand side would be drawing a border to nowhere.
   property bool edge: true
 
+  property var dragEntries: []
   signal contextRequested(var entry, string action)
   signal rowChosen(int index)
   signal rowToggled(int index)
@@ -50,6 +51,31 @@ Item {
     id: contextMenu
     service: root.service
     onRequested: function (action) { root.contextRequested(message, action) }
+  }
+
+  Rectangle {
+    id: mailDrag
+    property var entries: []
+    property bool dragging: false
+    width: Style.space(150)
+    height: Style.space(36)
+    z: 100
+    visible: dragging
+    color: ui.selected
+    radius: ui.radius
+    Drag.active: dragging
+    Drag.source: mailDrag
+    Drag.keys: ["olook-mails"]
+    Drag.supportedActions: Qt.MoveAction
+    Drag.hotSpot.x: 0
+    Drag.hotSpot.y: 0
+    Text {
+      anchors.centerIn: parent
+      text: mailDrag.entries.length + " message(s)"
+      color: ui.foreground
+      font.family: ui.fontFamily
+      font.pixelSize: Style.font.body
+    }
   }
 
   Rectangle {
@@ -408,6 +434,22 @@ Item {
               hoverEnabled: true
               cursorShape: Qt.PointingHandCursor
               acceptedButtons: Qt.LeftButton | Qt.RightButton
+              drag.target: mailDrag
+              drag.threshold: Style.space(8)
+              onPressed: function (mouse) {
+                if (mouse.button !== Qt.LeftButton) return
+                var point = rowHover.mapToItem(root, mouse.x, mouse.y)
+                mailDrag.x = point.x
+                mailDrag.y = point.y
+                mailDrag.entries = rowItem.picked && root.dragEntries.length
+                  ? root.dragEntries.slice() : [rowItem.modelData]
+              }
+              drag.onActiveChanged: if (drag.active) mailDrag.dragging = true
+              onReleased: {
+                if (mailDrag.dragging) mailDrag.Drag.drop()
+                mailDrag.dragging = false
+              }
+              onCanceled: { mailDrag.Drag.cancel(); mailDrag.dragging = false }
               onClicked: function (mouse) {
                 if (mouse.button === Qt.RightButton) {
                   contextMenu.message = rowItem.modelData
