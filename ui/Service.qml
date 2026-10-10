@@ -253,7 +253,7 @@ Item {
       root.configured = payload.configured === true
       root.unread = payload.unread || 0
       root.fresh = payload.fresh || 0
-      root.recent = payload.messages || []
+      root.recent = root.withoutRemoved(payload.messages)
       root.lastSync = payload.lastSync || 0
       root.ready = true
 
@@ -469,9 +469,31 @@ Item {
     loadMessages()
   }
 
+  // Hide optimistic removals from late list/status responses until failure.
+  // A successful move gets a new server UID, so the old key stays retired.
+  property var removedKeys: ({})
+  property int listRequest: 0
+  property int bodyRequest: 0
+  function messageKey(entry) {
+    return entry ? entry.account + "|" + entry.folder + "|" + entry.uid : ""
+  }
+  function sameMessage(first, second) {
+    return !!first && !!second && messageKey(first) === messageKey(second)
+  }
+  function withoutRemoved(rows) {
+    return (rows || []).filter(function (entry) { return !root.removedKeys[messageKey(entry)] })
+  }
+  function restoreGroup(group) {
+    var keys = Object.assign({}, root.removedKeys)
+    for (var i = 0; i < group.uids.length; i++)
+      delete keys[group.account + "|" + group.folder + "|" + group.uids[i]]
+    root.removedKeys = keys
+  }
   function loadMessages() {
     if (!root.accountId) return
     root.loading = true
+    var request = ++root.listRequest
+    var scope = root.accountId + "|" + root.folder + "|" + root.filter + "|" + root.query
     // The All folder is not a mailbox on any server: it is every account's
     // inbox in one list, so it names no account and no folder of its own.
     var args = root.viewingAll
@@ -484,13 +506,14 @@ Item {
     if (root.filter === "flagged") args.push("--flagged")
     if (root.query) args = args.concat(["--query", root.query])
     run(args, function (ok, payload, stderrText) {
+      if (request !== root.listRequest || scope !== root.accountId + "|" + root.folder + "|" + root.filter + "|" + root.query) return
       root.loading = false
       if (!ok) {
         reportFailure(payload, stderrText, "Could not read the mailbox")
         return
       }
       root.error = ""
-      root.messages = payload.messages || []
+      root.messages = root.withoutRemoved(payload.messages)
       root.messagesLoaded()
       // Keep the open message in sync with the refreshed row (flags, seen).
       if (root.selected) {
@@ -548,23 +571,25 @@ Item {
 
   function openMessage(entry) {
     if (!entry) return
+    var request = ++root.bodyRequest
     root.selected = entry
     root.body = null
     var args = accountArgs(["body", "--folder", entry.folder,
                             "--uid", String(entry.uid)], entry.account)
     if (!entry.seen) args.push("--mark-read")
     run(args, function (ok, payload, stderrText) {
+      if (request !== root.bodyRequest || !root.sameMessage(root.selected, entry)) return
       if (!ok) {
         reportFailure(payload, stderrText, "Could not open the message")
         // Resolve the pending state so the reading pane shows the failure
         // instead of an indefinite "Loading message…".
-        if (root.selected && root.selected.uid === entry.uid) {
+        if (root.sameMessage(root.selected, entry)) {
           root.body = { text: "", html: "", parts: [], headers: {}, failed: true }
           root.bodyLoaded()
         }
         return
       }
-      if (!root.selected || root.selected.uid !== entry.uid) return
+      if (!root.sameMessage(root.selected, entry)) return
       root.body = payload.body || null
       if (payload.message) root.selected = payload.message
       root.bodyLoaded()
@@ -591,7 +616,7 @@ Item {
         reportFailure(payload, stderrText, "Could not load the images")
         return
       }
-      if (!root.selected || root.selected.uid !== entry.uid) return
+      if (!root.sameMessage(root.selected, entry)) return
       root.body = payload.body
       root.bodyLoaded()
     }, "body")
@@ -1223,19 +1248,19 @@ Item {
     if (groups.length === 0) return
     root.busy = true
     var left = groups.length
-    for (var i = 0; i < groups.length; i++) {
-      var group = groups[i]
-      var args = accountArgs(build(group), group.account)
-      run(args, function (ok, payload, stderrText) {
-        if (!ok) reportFailure(payload, stderrText, failure)
-        else if (done) done(payload || {})
+    groups.forEach(function (group) {
+      run(accountArgs(build(group), group.account), function (ok, payload, stderrText) {
+        if (!ok) {
+          root.restoreGroup(group)
+          reportFailure(payload, stderrText, failure)
+        } else if (done) done(payload || {}, group)
         if (--left === 0) {
           root.busy = false
           root.loadMessages()
           root.refreshStatus()
         }
       }, "bulk")
-    }
+    })
   }
 
   // A category on every message given, or off every message given.
@@ -1334,7 +1359,7 @@ Item {
     var next = []
     for (var i = 0; i < root.messages.length; i++) {
       var row = root.messages[i]
-      if (row.uid === entry.uid && row.folder === entry.folder) {
+      if (root.sameMessage(row, entry)) {
         var copy = {}
         for (var key in row) copy[key] = row[key]
         copy.seen = seen
@@ -1385,6 +1410,7 @@ Item {
     run(args, function (ok, payload, stderrText) {
       root.busy = false
       if (!ok) {
+        root.restoreGroup(root.groupByMailbox([entry])[0])
         reportFailure(payload, stderrText, "Could not move the message")
         root.loadMessages()
         return
@@ -1407,6 +1433,7 @@ Item {
     run(args, function (ok, payload, stderrText) {
       root.busy = false
       if (!ok) {
+        root.restoreGroup(root.groupByMailbox([entry])[0])
         reportFailure(payload, stderrText, "Could not delete the message")
         root.loadMessages()
         return
@@ -1421,20 +1448,18 @@ Item {
   // Drop the row from the list right away so the UI answers the click, and
   // let the reload that follows the server round trip be the correction.
   function dropLocal(entry) {
-    var next = []
-    var nextSelected = null
-    for (var i = 0; i < root.messages.length; i++) {
-      var row = root.messages[i]
-      if (row.uid === entry.uid && row.folder === entry.folder) {
-        nextSelected = root.messages[i + 1] || root.messages[i - 1] || null
-        continue
-      }
-      next.push(row)
-    }
+    var keys = Object.assign({}, root.removedKeys)
+    keys[root.messageKey(entry)] = true
+    root.removedKeys = keys
+    var index = root.messages.findIndex(function (row) { return root.sameMessage(row, entry) })
+    var next = root.withoutRemoved(root.messages)
     root.messages = next
-    if (root.selected && root.selected.uid === entry.uid) {
+    root.recent = root.withoutRemoved(root.recent)
+    if (root.sameMessage(root.selected, entry)) {
+      ++root.bodyRequest
       root.selected = null
       root.body = null
+      var nextSelected = next[Math.min(Math.max(index, 0), next.length - 1)]
       if (nextSelected) openMessage(nextSelected)
     }
   }
