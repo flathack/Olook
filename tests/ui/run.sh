@@ -9,6 +9,7 @@ for module in Commons Ui services; do
   ln -s "$omarchy_shell/$module" "$test_dir/$module"
 done
 cp "$repo_dir/tests/ui/shell.qml" "$test_dir/shell.qml"
-timeout 20 quickshell -p "$test_dir" --no-color 2>&1 | tee "$test_dir/result.log"
+cc -shared -fPIC "$repo_dir/lib/argcshim.c" -ldl -o "$test_dir/argcshim.so"
+LD_PRELOAD="$test_dir/argcshim.so${LD_PRELOAD:+:$LD_PRELOAD}" timeout 20 quickshell -p "$test_dir" --no-color 2>&1 | tee "$test_dir/result.log"
 grep -q 'OLOOK_INTERACTION_TESTS_PASS' "$test_dir/result.log"
 ! grep -q 'INTERACTION_FAIL' "$test_dir/result.log"

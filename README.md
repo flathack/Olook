@@ -483,10 +483,12 @@ is not taken on trust.
 ## Regression checks
 
 `python -m unittest discover -s tests -v` checks the privacy decisions.
-`tests/service/run.sh` runs six mail-state scenarios in Quickshell with all
-engine calls intercepted. `tests/ui/run.sh` opens a fixture window to exercise
-message context menus and single/bulk mouse dragging. The UI check requires an Omarchy Wayland session and
-QtTest. Neither check reads real accounts or changes mail.
+`tests/service/run.sh` runs seven mail-state scenarios in Quickshell with all
+engine calls intercepted. `tests/ui/run.sh` opens fixture windows to exercise
+context menus, mouse dragging, and a large newsletter. The UI check requires
+an Omarchy Wayland session, QtTest, QtWebEngine, and a C compiler; it uses a
+temporary, process-scoped argument shim. Neither check reads real accounts or
+changes mail.
 
 ## Licence
 

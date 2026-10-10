@@ -31,6 +31,21 @@ ShellRoot {
     function moveMany(entries, target) { moved.push({entries:entries,target:target}) }
   }
   FloatingWindow {
+    id: readerWindow
+    visible: false
+    title: "Olook newsletter QA"
+    implicitWidth: 820
+    implicitHeight: 640
+    MailReader {
+      id: reader
+      anchors.fill: parent
+      ui: style
+      message: ({account:"qa",folder:"INBOX",uid:1,subject:"Newsletter fixture",fromAddr:"qa@example.test",date:1})
+      body: ({text:"Fixture",rich:"<table>" + "<tr><td>Newsletter</td></tr>".repeat(1800) + "</table>",
+              document:"<!DOCTYPE html><html><body><table>" + "<tr><td>Newsletter</td></tr>".repeat(1800) + "</table></body></html>"})
+    }
+  }
+  FloatingWindow {
     id: window
     visible: true
     title: "Olook interaction QA"
@@ -73,6 +88,14 @@ ShellRoot {
           }
           return null
         }
+        function findEngine(item) {
+          if (item.source && String(item.source).endsWith("MailHtmlView.qml")) return item
+          var children = item.children || []
+          for (var i = 0; i < children.length; i++) {
+            var found = findEngine(children[i]); if (found) return found
+          }
+          return null
+        }
         function test_interactions() {
           wait(500)
           mouseClick(list, 100, 70, Qt.LeftButton)
@@ -110,7 +133,17 @@ ShellRoot {
           wait(100)
           assertEqual(service.moved.length, 1, "line 130: compare(service.moved.length, 1)")
           assertEqual(service.moved[0].entries.length, 2, "line 131: compare(service.moved[0].entries.length, 2)")
-          console.log("OLOOK_INTERACTION_TESTS_PASS: menu, single/bulk drag")
+          readerWindow.visible = true
+          wait(1500)
+          assertTrue(reader.webRenderer, "line 134: verify(reader.webRenderer)")
+          var engine = findEngine(reader)
+          assertTrue(engine !== null, "line 136: verify(engine !== null)")
+          assertTrue(engine.item !== null, "line 137: verify(engine.item !== null)")
+          assertTrue(engine.item.measured > 120, "line 138: verify(engine.item.contentHeight > 0)")
+          reader.message = null
+          wait(100)
+          assertTrue(engine.active && engine.item !== null, "line 141: verify(engine.active && engine.item !== null)")
+          console.log("OLOOK_INTERACTION_TESTS_PASS: menu, single/bulk drag, persistent newsletter renderer")
         }
       }
     }

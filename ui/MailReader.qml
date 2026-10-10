@@ -591,7 +591,7 @@ Item {
             id: formattedCard
             // A browser engine when the shell can host one, Qt's rich text
             // when it cannot: the same card either way.
-            readonly property bool web: htmlView.status === Loader.Ready
+            readonly property bool web: htmlView.status === Loader.Ready && root.webDocument !== ""
             width: parent.width
             height: visible
               ? (web ? htmlView.item.contentHeight
@@ -606,8 +606,10 @@ Item {
               id: htmlView
               width: parent.width
               height: item ? item.contentHeight : 0
-              active: root.webRenderer && root.webDocument !== ""
-                && root.hasRich && root.formatted && !root.loadingBody
+              // Keep the engine alive between messages; construct off the UI thread.
+              asynchronous: true
+              active: root.webRenderer
+              visible: root.webDocument !== "" && root.formatted && !root.loadingBody
               source: "MailHtmlView.qml"
               // Remote access first, then the document: setting the
               // document is what triggers the load, and a load that starts
@@ -641,7 +643,10 @@ Item {
               width: parent.width - Style.space(28)
               // Qt's rich text has no page of its own to carry margins, so
               // this one keeps the inset the web view does not need.
-              text: root.body ? String(root.body.rich || "") : ""
+              // Invisible TextEdits still parse/layout their text synchronously.
+              text: (!root.webRenderer || root.webDocument === "" || htmlView.status === Loader.Error)
+                && root.formatted && root.body
+                ? String(root.body.rich || "") : ""
               textFormat: TextEdit.RichText
               color: "#16181d"
               font.family: ui.fontFamily
@@ -667,7 +672,8 @@ Item {
             x: bodyColumn.gutter
             width: parent.width - bodyColumn.gutter * 2
             visible: !root.loadingBody && !(root.hasRich && root.formatted)
-            text: root.body ? String(root.body.text || "") : ""
+            text: !root.loadingBody && !(root.hasRich && root.formatted) && root.body
+              ? String(root.body.text || "") : ""
             color: ui.foreground
             font.family: ui.fontFamily
             font.pixelSize: Style.font.body

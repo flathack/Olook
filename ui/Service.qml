@@ -489,6 +489,18 @@ Item {
       delete keys[group.account + "|" + group.folder + "|" + group.uids[i]]
     root.removedKeys = keys
   }
+  function markReadInBackground(entry) {
+    root.markLocalSeen(entry, true)
+    run(accountArgs(["flag", "--folder", entry.folder, "--uid", String(entry.uid),
+                     "--set", "seen"], entry.account), function (ok, payload, stderrText) {
+      if (!ok) {
+        reportFailure(payload, stderrText, "Could not mark the message read")
+        root.loadMessages()
+      }
+      root.refreshStatus()
+    }, "mark-read")
+  }
+
   function loadMessages() {
     if (!root.accountId) return
     root.loading = true
@@ -576,7 +588,7 @@ Item {
     root.body = null
     var args = accountArgs(["body", "--folder", entry.folder,
                             "--uid", String(entry.uid)], entry.account)
-    if (!entry.seen) args.push("--mark-read")
+    // Deliver the cached body before waiting for a server flag update.
     run(args, function (ok, payload, stderrText) {
       if (request !== root.bodyRequest || !root.sameMessage(root.selected, entry)) return
       if (!ok) {
@@ -594,8 +606,7 @@ Item {
       if (payload.message) root.selected = payload.message
       root.bodyLoaded()
       if (!entry.seen) {
-        markLocalSeen(entry, true)
-        root.refreshStatus()
+        root.markReadInBackground(entry)
       }
     }, "body")
   }
@@ -1152,7 +1163,7 @@ Item {
     if (!entry || !handler) return
     var args = accountArgs(["body", "--folder", entry.folder,
                             "--uid", String(entry.uid)], entry.account)
-    if (markRead) args.push("--mark-read")
+    // Updating the server flag must not delay delivery to a pop-out reader.
     if (remoteImages) args.push("--remote-images")
     run(args, function (ok, payload, stderrText) {
       if (!ok || !payload || !payload.body) {
@@ -1162,8 +1173,7 @@ Item {
       }
       handler(payload.body, payload.message || entry)
       if (markRead) {
-        markLocalSeen(entry, true)
-        root.refreshStatus()
+        root.markReadInBackground(entry)
       }
     }, "body")
   }

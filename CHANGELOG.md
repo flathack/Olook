@@ -6,6 +6,7 @@
 - Enlarge reader actions to 40px with readable labels and at least 44px targets.
 - Move individual or selected messages into folders by dragging; refuse other accounts and the source folder.
 - Prevent late list/body responses from resurrecting deleted mail or replacing a different message. Restore rows on failed moves/deletions.
+- Keep the HTML engine alive, load it asynchronously, and avoid layout of hidden rich/plain text. Update read flags after delivering the body.
 
 ## 1.2.6
 

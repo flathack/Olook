@@ -90,7 +90,16 @@ ShellRoot {
             && service.withoutRemoved([a, b])[0].account === "b",
             "partial bulk failure must restore only its own mailbox")
 
-      console.log("OLOOK_SERVICE_TESTS_PASS: 6 scenarios")
+      reset()
+      var unread = entry("a", "INBOX", 3)
+      unread.seen = false
+      service.openMessage(unread)
+      check(service.calls[0].args.indexOf("--mark-read") < 0,
+            "body delivery must not wait for the server's read flag")
+      service.calls[0].handler(true, { message: unread, body: { text: "ready" } }, "")
+      check(service.body.text === "ready" && service.calls[1].label === "mark-read",
+            "mark-read must start after body delivery")
+      console.log("OLOOK_SERVICE_TESTS_PASS: 7 scenarios")
     } catch (error) {
       console.error("OLOOK_SERVICE_TESTS_FAIL: " + error)
     }
