@@ -183,10 +183,13 @@ Panel {
     focusSection = "messages"
     mail.refreshStatus()
     Qt.callLater(function () { keyCatcher.forceActiveFocus() })
+  } else {
+    panelMessageMenu.close()
   }
 
   Service {
     id: mail
+    objectName: "olook-bar-service"
     settings: root.settings
 
     // One syncer per desktop: the other monitors' widgets render the same
@@ -358,6 +361,7 @@ Panel {
 
   KeyboardPanel {
     id: panel
+    objectName: "olook-bar-panel"
     anchorItem: button
     owner: root
     bar: root.bar
@@ -389,6 +393,28 @@ Panel {
       Item {
         id: panelBody
         anchors.fill: parent
+
+        // Keep the menu on the layer-shell surface and outside message delegates:
+        // deleting a row must not destroy its own active menu handler.
+        MailContextMenu {
+          id: panelMessageMenu
+          objectName: "olook-bar-message-menu"
+          parent: panelBody
+          popupType: Popup.Item
+          service: mail
+          onRequested: function (action) {
+            var entry = panelMessageMenu.message
+            if (!entry) return
+            if (action === "open") root.openMessage(entry)
+            else if (action === "reply" || action === "reply-all" || action === "forward")
+              root.openWindow({ account: entry.account, folder: entry.folder, uid: entry.uid, action: action })
+            else if (action === "delete") mail.remove(entry)
+            else if (action === "archive") mail.archive(entry)
+            else if (action === "read") mail.toggleRead(entry)
+            else if (action === "flag") mail.toggleFlagged(entry)
+            else if (action.indexOf("move:") === 0) mail.moveTo(entry, action.slice(5))
+          }
+        }
 
         Column {
           id: headerColumn
@@ -705,6 +731,7 @@ Panel {
 
   component MessageRow: CursorSurface {
     id: messageRow
+    objectName: "olook-bar-message-row-" + rowIndex
     property var message: null
     property int rowIndex: 0
 
@@ -712,25 +739,8 @@ Panel {
     foreground: root.foreground
     implicitHeight: rowContent.implicitHeight + Style.spacing.rowPaddingX
 
-    MailContextMenu {
-      id: messageMenu
-      message: messageRow.message
-      service: mail
-      onRequested: function (action) {
-        var entry = messageRow.message
-        if (!entry) return
-        if (action === "open") root.openMessage(entry)
-        else if (action === "reply" || action === "reply-all" || action === "forward")
-          root.openWindow({ account: entry.account, folder: entry.folder, uid: entry.uid, action: action })
-        else if (action === "delete") mail.remove(entry)
-        else if (action === "archive") mail.archive(entry)
-        else if (action === "read") mail.toggleRead(entry)
-        else if (action === "flag") mail.toggleFlagged(entry)
-        else if (action.indexOf("move:") === 0) mail.moveTo(entry, action.slice(5))
-      }
-    }
-
     MouseArea {
+      objectName: "olook-bar-message-hit-" + messageRow.rowIndex
       anchors.fill: parent
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
@@ -741,7 +751,11 @@ Panel {
         root.messageIndex = messageRow.rowIndex
       }
       onClicked: function (mouse) {
-        if (mouse.button === Qt.RightButton) messageMenu.popup(parent, mouse.x, mouse.y)
+        if (mouse.button === Qt.RightButton) {
+          var point = messageRow.mapToItem(panelBody, mouse.x, mouse.y)
+          panelMessageMenu.message = messageRow.message
+          panelMessageMenu.popup(point.x, point.y)
+        }
         else root.openMessage(messageRow.message)
       }
     }

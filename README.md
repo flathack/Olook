@@ -488,7 +488,9 @@ engine calls intercepted. `tests/ui/run.sh` opens fixture windows to exercise
 context menus, mouse dragging, and a large newsletter. The UI check requires
 an Omarchy Wayland session, QtTest, QtWebEngine, and a C compiler; it uses a
 temporary, process-scoped argument shim. Neither check reads real accounts or
-changes mail.
+changes mail. `tests/bar/run.sh` exercises right-click and Delete in the actual
+bar layer-shell panel, using a temporary fake mail engine with no network or
+access to real accounts.
 
 ## Licence
 
