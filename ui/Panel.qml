@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -218,7 +219,7 @@ Panel {
                   "--action=default=Open", "--",
                   Model.senderLabel(message),
                   Model.notifyText(String(message.subject || "")
-                    + (count > 1 ? "\nand " + (count - 1) + " more" : ""))],
+                    + (count > 1 ? "\nand " + (count - 1) + I18n.tr(" more") : ""))],
         target: {
           account: String(message.account || ""),
           folder: String(message.folder || ""),
@@ -292,10 +293,10 @@ Panel {
     id: barMenu
     popupType: Popup.Window
     parent: button
-    MenuItem { text: "Open Olook"; onTriggered: root.openWindow({}) }
-    MenuItem { text: "New message"; onTriggered: root.compose() }
-    MenuItem { text: "Check for mail"; onTriggered: mail.sync(false) }
-    MenuItem { text: "Settings"; onTriggered: root.openWindow({ view: "settings" }) }
+    MenuItem { text: I18n.tr("Open Olook"); onTriggered: root.openWindow({}) }
+    MenuItem { text: I18n.tr("New message"); onTriggered: root.compose() }
+    MenuItem { text: I18n.tr("Check for mail"); onTriggered: mail.sync(false) }
+    MenuItem { text: I18n.tr("Settings"); onTriggered: root.openWindow({ view: "settings" }) }
   }
 
   BarIconButton {
@@ -431,8 +432,8 @@ Panel {
             // above that is a label on a thing you just pointed at.
             title: ""
             meta: {
-              if (!mail.configured) return "No account yet"
-              if (mail.syncing) return "Checking for mail…"
+              if (!mail.configured) return I18n.tr("No account yet")
+              if (mail.syncing) return I18n.tr("Checking for mail…")
               // With one mailbox picked, the count should be that mailbox's,
               // not every account's.
               var unread = root.filteredAccount ? (root.filteredAccount.unread || 0)
@@ -462,7 +463,7 @@ Panel {
 
                 PanelToolTip {
                   visible: parent.containsMouse !== undefined ? parent.containsMouse : false
-                  text: "Check for new mail"
+                  text: I18n.tr("Check for new mail")
                   fontFamily: root.fontFamily
                 }
               }
@@ -541,7 +542,7 @@ Panel {
               textFormat: Text.PlainText
               visible: !!(mail.configured && root.visibleMessages.length === 0)
               width: parent.width
-              text: mail.loading ? "Loading…" : "Nothing in this mailbox yet."
+              text: mail.loading ? I18n.tr("Loading…") : I18n.tr("Nothing in this mailbox yet.")
               color: root.dim
               font.family: root.fontFamily
               font.pixelSize: Style.font.body
@@ -581,12 +582,12 @@ Panel {
             spacing: Style.space(8)
 
             FooterAction {
-              text: "Open Mail"
+              text: I18n.tr("Open Mail")
               glyph: "󰏋"
               onTriggered: root.openWindow({})
             }
             FooterAction {
-              text: "New message"
+              text: I18n.tr("New message")
               glyph: "󰝒"
               onTriggered: root.compose()
             }
@@ -598,10 +599,10 @@ Panel {
 
   function mailboxLabel() {
     if (root.filteredAccount)
-      return String(root.filteredAccount.email || "Inbox").toUpperCase()
+      return String(root.filteredAccount.email || I18n.tr("Inbox")).toUpperCase()
     if (mail.accounts.length > 1) return "ALL INBOXES"
     var account = mail.currentAccount
-    var label = account ? (account.email || "Inbox") : "Inbox"
+    var label = account ? (account.email || I18n.tr("Inbox")) : I18n.tr("Inbox")
     return label.toUpperCase()
   }
 
@@ -628,7 +629,7 @@ Panel {
       textFormat: Text.PlainText
       visible: !chip.account
       anchors.centerIn: parent
-      text: "All"
+      text: I18n.tr("All")
       color: chip.current ? Color.accent : root.dim
       font.family: root.fontFamily
       font.pixelSize: Style.font.caption
@@ -679,7 +680,7 @@ Panel {
     PanelToolTip {
       visible: chipHover.containsMouse
       text: {
-        if (!chip.account) return "All inboxes"
+        if (!chip.account) return I18n.tr("All inboxes")
         var unread = chip.account.unread || 0
         return String(chip.account.email) + (unread > 0 ? " — " + unread + " unread" : "")
       }
@@ -712,7 +713,7 @@ Panel {
       Text {
         textFormat: Text.PlainText
         width: parent.width
-        text: "Add a mail account"
+        text: I18n.tr("Add a mail account")
         color: root.foreground
         font.family: root.fontFamily
         font.pixelSize: Style.font.body
@@ -809,7 +810,7 @@ Panel {
         Text {
           textFormat: Text.PlainText
           Layout.fillWidth: true
-          text: messageRow.message ? String(messageRow.message.subject || "(no subject)") : ""
+          text: messageRow.message ? String(messageRow.message.subject || I18n.tr("(no subject)")) : ""
           color: root.foreground
           opacity: messageRow.message && messageRow.message.seen ? 0.75 : 1
           font.family: root.fontFamily

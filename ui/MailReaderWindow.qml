@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import Quickshell
 import qs.Commons
@@ -31,7 +32,7 @@ FloatingWindow {
 
   title: {
     var subject = window.message ? String(window.message.subject || "") : ""
-    return (subject.trim() === "" ? "Message" : subject) + " — Olook"
+    return (subject.trim() === "" ? I18n.tr("Message") : subject) + " — Olook"
   }
   color: ui ? ui.background : "#101010"
   implicitWidth: Style.space(820)

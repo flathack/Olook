@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import qs.Commons
 import qs.Ui
@@ -41,9 +42,9 @@ Item {
     anchors.horizontalCenterOffset: Style.space(2)
     spacing: Style.space(6)
 
-    RailButton { glyph: "󰇮"; label: "Mail"; target: "mail"; badge: root.unread }
-    RailButton { glyph: "󰃭"; label: "Calendar"; target: "calendar" }
-    RailButton { glyph: "󰀓"; label: "People"; target: "people" }
+    RailButton { glyph: "󰇮"; label: I18n.tr("Mail"); target: "mail"; badge: root.unread }
+    RailButton { glyph: "󰃭"; label: I18n.tr("Calendar"); target: "calendar" }
+    RailButton { glyph: "󰀓"; label: I18n.tr("People"); target: "people" }
   }
 
   // Pinned to the bottom, where every desktop app keeps its settings.
@@ -53,7 +54,7 @@ Item {
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.horizontalCenterOffset: Style.space(2)
 
-    RailButton { glyph: "󰒓"; label: "Settings"; target: "settings" }
+    RailButton { glyph: "󰒓"; label: I18n.tr("Settings"); target: "settings" }
   }
 
   component RailButton: Item {

@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import QtQuick.Controls
@@ -195,7 +196,7 @@ Item {
               textFormat: Text.PlainText
               anchors.verticalCenter: parent.verticalCenter
               visible: searchField.text === ""
-              text: "Search people…"
+              text: I18n.tr("Search people…")
               color: ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.bodySmall
@@ -232,7 +233,7 @@ Item {
 
           PanelToolTip {
             visible: addHover.containsMouse
-            text: "Add a contact"
+            text: I18n.tr("Add a contact")
             fontFamily: ui.fontFamily
           }
         }
@@ -268,7 +269,7 @@ Item {
 
           PanelToolTip {
             visible: syncHover.containsMouse
-            text: "Fetch contacts from your accounts"
+            text: I18n.tr("Fetch contacts from your accounts")
             fontFamily: ui.fontFamily
           }
         }
@@ -408,10 +409,10 @@ Item {
         visible: root.current === null && !root.editing
         ui: root.ui
         glyph: "󰀓"
-        title: root.people.length === 0 ? "No people yet" : "Nobody selected"
+        title: root.people.length === 0 ? I18n.tr("No people yet") : I18n.tr("Nobody selected")
         subtitle: root.people.length === 0
-          ? "Sync some mail and the people you write to will show up here."
-          : "Pick someone on the left to see what you have exchanged."
+          ? I18n.tr("Sync some mail and the people you write to will show up here.")
+          : I18n.tr("Pick someone on the left to see what you have exchanged.")
       }
 
       Column {
@@ -489,12 +490,12 @@ Item {
           spacing: Style.space(8)
 
           ActionChip {
-            label: "󰇮  New mail"
+            label: I18n.tr("󰇮  New mail")
             onTriggered: if (root.current) root.composeRequested(root.current.address)
           }
 
           ActionChip {
-            label: "󰍉  Their mail"
+            label: I18n.tr("󰍉  Their mail")
             onTriggered: if (root.current) root.mailRequested(root.current.address)
           }
 
@@ -510,7 +511,7 @@ Item {
           ActionChip {
             visible: !!(root.canEdit && root.current && root.current.inAddressBook)
             urgent: root.confirmingDelete
-            label: root.confirmingDelete ? "󰩹  Really delete?" : "󰩹  Delete"
+            label: root.confirmingDelete ? I18n.tr("󰩹  Really delete?") : I18n.tr("󰩹  Delete")
             onTriggered: {
               if (root.confirmingDelete) root.deleteCurrent()
               else root.confirmingDelete = true
@@ -526,17 +527,17 @@ Item {
 
           DetailLine {
             label: root.current && root.current.phones.length > 1
-              ? "Phone numbers" : "Phone"
+              ? I18n.tr("Phone numbers") : I18n.tr("Phone")
             visible: !!(root.current && root.current.phones.length > 0)
             value: root.current ? root.current.phones.join("   ") : ""
           }
           DetailLine {
-            label: "Organisation"
+            label: I18n.tr("Organisation")
             visible: !!(root.current && root.current.organisation !== "")
             value: root.current ? root.current.organisation : ""
           }
           DetailLine {
-            label: "Messages"
+            label: I18n.tr("Messages")
             value: root.current ? String(root.current.messages) : ""
           }
           DetailLine {
@@ -548,12 +549,12 @@ Item {
             value: root.current ? String(root.current.sent) : ""
           }
           DetailLine {
-            label: "Last seen"
+            label: I18n.tr("Last seen")
             value: root.current ? Model.fullTime(root.current.lastSeen) : ""
           }
           DetailLine {
             label: root.current && root.current.accounts.length === 1
-              ? "Account" : "Accounts"
+              ? I18n.tr("Account") : I18n.tr("Accounts")
             value: root.current ? root.current.accounts.join(", ") : ""
           }
         }
@@ -577,7 +578,7 @@ Item {
 
         Text {
           textFormat: Text.PlainText
-          text: root.draftResource === "" ? "New contact" : "Edit contact"
+          text: root.draftResource === "" ? I18n.tr("New contact") : I18n.tr("Edit contact")
           color: ui.foreground
           font.family: ui.fontFamily
           font.pixelSize: Style.font.title
@@ -586,7 +587,7 @@ Item {
         EditField {
           id: nameField
           width: parent.width
-          label: "Name"
+          label: I18n.tr("Name")
           placeholder: "Ada Lovelace"
           onEdited: function (value) { root.draftName = value }
         }
@@ -594,7 +595,7 @@ Item {
         EditField {
           id: emailField
           width: parent.width
-          label: "Email"
+          label: I18n.tr("Email")
           placeholder: "ada@example.com, ada@work.com"
           onEdited: function (value) { root.draftEmails = value }
         }
@@ -602,7 +603,7 @@ Item {
         EditField {
           id: phoneField
           width: parent.width
-          label: "Phone"
+          label: I18n.tr("Phone")
           placeholder: "+31 6 12345678"
           onEdited: function (value) { root.draftPhones = value }
         }
@@ -610,7 +611,7 @@ Item {
         EditField {
           id: orgField
           width: parent.width
-          label: "Organisation"
+          label: I18n.tr("Organisation")
           placeholder: "Analytical Engines Ltd"
           onEdited: function (value) { root.draftOrganisation = value }
         }
@@ -619,7 +620,7 @@ Item {
           width: parent.width
           textFormat: Text.PlainText
           wrapMode: Text.Wrap
-          text: "Separate several addresses or numbers with commas."
+          text: I18n.tr("Separate several addresses or numbers with commas.")
           color: ui.faint
           font.family: ui.fontFamily
           font.pixelSize: Style.font.bodySmall
@@ -629,12 +630,12 @@ Item {
           spacing: Style.space(8)
 
           ActionChip {
-            label: "󰆓  Save"
+            label: I18n.tr("󰆓  Save")
             onTriggered: root.saveDraft()
           }
 
           ActionChip {
-            label: "Cancel"
+            label: I18n.tr("Cancel")
             onTriggered: root.editing = false
           }
         }

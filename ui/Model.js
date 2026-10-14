@@ -37,10 +37,10 @@ function shortTime(epochSeconds, now) {
   var stamp = startOfDay(date)
   var days = Math.round((today - stamp) / 86400000)
   if (days <= 0) return pad(date.getHours()) + ":" + pad(date.getMinutes())
-  if (days === 1) return "Yesterday"
-  if (days < 7) return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()]
-  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  if (days === 1) return "Gestern"
+  if (days < 7) return ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][date.getDay()]
+  var months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+                "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
   if (date.getFullYear() === (now || new Date()).getFullYear())
     return date.getDate() + " " + months[date.getMonth()]
   return date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear()
@@ -49,24 +49,24 @@ function shortTime(epochSeconds, now) {
 function fullTime(epochSeconds) {
   if (!epochSeconds) return ""
   var date = new Date(epochSeconds * 1000)
-  var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  var months = ["January", "February", "March", "April", "May", "June", "July",
-                "August", "September", "October", "November", "December"]
+  var days = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"]
+  var months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
+                "August", "September", "Oktober", "November", "Dezember"]
   return days[date.getDay()] + " " + date.getDate() + " " + months[date.getMonth()]
-    + " " + date.getFullYear() + " at " + pad(date.getHours()) + ":" + pad(date.getMinutes())
+    + " " + date.getFullYear() + " um " + pad(date.getHours()) + ":" + pad(date.getMinutes())
 }
 
 // Outlook groups its list by age; the header text is derived, never stored.
 function dateGroup(epochSeconds, now) {
-  if (!epochSeconds) return "Older"
+  if (!epochSeconds) return "Älter"
   var reference = now || new Date()
   var today = startOfDay(reference)
   var days = Math.round((today - startOfDay(new Date(epochSeconds * 1000))) / 86400000)
-  if (days <= 0) return "Today"
-  if (days === 1) return "Yesterday"
-  if (days < 7) return "This week"
-  if (days < 30) return "This month"
-  return "Older"
+  if (days <= 0) return "Heute"
+  if (days === 1) return "Gestern"
+  if (days < 7) return "Diese Woche"
+  if (days < 30) return "Diesen Monat"
+  return "Älter"
 }
 
 // Insert group headers into a flat, date-sorted message list.
@@ -188,12 +188,12 @@ function folderLabel(folder) {
   var name = String(folder && folder.name ? folder.name : "")
   var role = folder && folder.special ? folder.special : ""
   var pretty = {
-    inbox: "Inbox", sent: "Sent Items", drafts: "Drafts", trash: "Deleted Items",
-    junk: "Junk Email", archive: "Archive", all: "Archive",
-    allaccounts: "All mail"
+    inbox: "Posteingang", sent: "Gesendet", drafts: "Entwürfe", trash: "Papierkorb",
+    junk: "Spam", archive: "Archiv", all: "Archiv",
+    allaccounts: "Alle E-Mails"
   }
   if (pretty[role]) return pretty[role]
-  if (name.toUpperCase() === "INBOX") return "Inbox"
+  if (name.toUpperCase() === "INBOX") return "Posteingang"
   var parts = name.split(/[\/.]/)
   return parts[parts.length - 1] || name
 }

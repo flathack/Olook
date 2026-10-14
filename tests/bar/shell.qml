@@ -56,7 +56,7 @@ ShellRoot {
       check(menu.popupType === Popup.Item, "menu stays on the layer-shell surface")
       check(menu.message && menu.message.uid === 1, "context targets the clicked mail")
       var deleteItem = menu.itemAt(10)
-      check(deleteItem.text === "Delete", "delete action available")
+      check(deleteItem.text === "Löschen", "delete action available")
       mouseClick(deleteItem, deleteItem.width/2, deleteItem.height/2, Qt.LeftButton)
       wait(400)
       check(service.recent.length === 0, "delete removes the fixture mail from the bar")

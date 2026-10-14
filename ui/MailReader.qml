@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import qs.Commons
@@ -117,8 +118,8 @@ Item {
     visible: root.message === null
     ui: root.ui
     glyph: "󰇰"
-    title: "Nothing selected"
-    subtitle: "Pick a message on the left to read it here."
+    title: I18n.tr("Nothing selected")
+    subtitle: I18n.tr("Pick a message on the left to read it here.")
   }
 
   Column {
@@ -167,7 +168,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               anchors.verticalCenter: parent.verticalCenter
-              text: "Messages"
+              text: I18n.tr("Messages")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.caption
@@ -186,7 +187,7 @@ Item {
         Text {
           textFormat: Text.PlainText
           width: parent.width
-          text: root.message ? String(root.message.subject || "(no subject)") : ""
+          text: root.message ? String(root.message.subject || I18n.tr("(no subject)")) : ""
           color: ui.foreground
           font.family: ui.fontFamily
           font.pixelSize: Style.font.heading
@@ -286,9 +287,9 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: {
                   if (!root.authentication) return ""
-                  if (!root.verifiedSender) return "Sender could not be verified"
+                  if (!root.verifiedSender) return I18n.tr("Sender could not be verified")
                   var by = String(root.authentication.signedBy || "")
-                  return by === "" ? "Verified sender" : "Verified as " + by
+                  return by === "" ? I18n.tr("Verified sender") : I18n.tr("Verified as ") + by
                 }
                 color: root.verifiedSender ? ui.faint : ui.urgent
                 font.family: ui.fontFamily
@@ -305,7 +306,7 @@ Item {
               width: parent.width
               visible: root.showAccount && !!root.account
               text: root.account
-                ? "Received by " + String(root.account.email || root.account.name || "")
+                ? I18n.tr("Received by ") + String(root.account.email || root.account.name || "")
                 : ""
               color: ui.accent
               font.family: ui.fontFamily
@@ -372,23 +373,23 @@ Item {
           spacing: Style.space(6)
 
           SegmentedGroup {
-            SegButton { glyph: "󰑚"; label: "Reply"; onTriggered: root.replyRequested("reply") }
-            SegButton { glyph: "󰑛"; label: "Reply all"; onTriggered: root.replyRequested("reply-all") }
-            SegButton { glyph: "󰒭"; label: "Forward"; onTriggered: root.replyRequested("forward") }
+            SegButton { glyph: "󰑚"; label: I18n.tr("Reply"); onTriggered: root.replyRequested("reply") }
+            SegButton { glyph: "󰑛"; label: I18n.tr("Reply all"); onTriggered: root.replyRequested("reply-all") }
+            SegButton { glyph: "󰒭"; label: I18n.tr("Forward"); onTriggered: root.replyRequested("forward") }
           }
 
           SegmentedGroup {
-            SegButton { glyph: "󰇠"; label: "Archive"; onTriggered: root.archiveRequested() }
-            SegButton { glyph: "󰩹"; label: "Delete"; onTriggered: root.deleteRequested() }
+            SegButton { glyph: "󰇠"; label: I18n.tr("Archive"); onTriggered: root.archiveRequested() }
+            SegButton { glyph: "󰩹"; label: I18n.tr("Delete"); onTriggered: root.deleteRequested() }
             SegButton {
               glyph: "󰈻"
-              label: root.message && root.message.flagged ? "Unflag" : "Flag"
+              label: root.message && root.message.flagged ? I18n.tr("Unflag") : I18n.tr("Flag")
               highlighted: root.message ? root.message.flagged === true : false
               onTriggered: root.flagRequested()
             }
             SegButton {
               glyph: "󰇮"
-              label: root.message && root.message.seen ? "Mark unread" : "Mark read"
+              label: root.message && root.message.seen ? I18n.tr("Mark unread") : I18n.tr("Mark read")
               onTriggered: root.unreadRequested()
             }
           }
@@ -445,7 +446,7 @@ Item {
             height: visible ? implicitHeight : 0
 
             ViewToggle {
-              label: root.formatted ? "󰈙  Formatted" : "󰦨  Plain text"
+              label: root.formatted ? I18n.tr("󰈙  Formatted") : I18n.tr("󰦨  Plain text")
               onTriggered: root.formatted = !root.formatted
             }
 
@@ -466,7 +467,7 @@ Item {
             // opened -- that is what the tracking pixel among them is for.
             // So it stays the reader's decision, one message at a time.
             ViewToggle {
-              label: "󰋩  Show images"
+              label: I18n.tr("󰋩  Show images")
               visible: root.blockedImages > 0 && root.formatted
               onTriggered: {
                 root.remoteImages = true
@@ -480,7 +481,7 @@ Item {
             // when the From line is only a claim. A decision about a name,
             // not about a proof.
             ViewToggle {
-              label: "󰀓  Always from this sender"
+              label: I18n.tr("󰀓  Always from this sender")
               visible: root.blockedImages > 0 && root.formatted
                 && !root.senderTrusted && root.senderAddress !== ""
               onTriggered: root.trustSenderRequested(root.senderAddress)
@@ -580,7 +581,7 @@ Item {
             x: bodyColumn.gutter
             width: parent.width - bodyColumn.gutter * 2
             visible: root.loadingBody
-            text: "Loading message…"
+            text: I18n.tr("Loading message…")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.body
@@ -694,8 +695,8 @@ Item {
             text: root.body && root.body.failed === true
               ? "This message could not be loaded. "
                 + (root.service && root.service.error !== ""
-                   ? root.service.error : "Check the account's connection.")
-              : "This message has no text content."
+                   ? root.service.error : I18n.tr("Check the account's connection."))
+              : I18n.tr("This message has no text content.")
             color: root.body && root.body.failed === true ? ui.urgent : ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -880,7 +881,7 @@ Item {
 
     PanelToolTip {
       visible: chipHover.containsMouse
-      text: "Save and open"
+      text: I18n.tr("Save and open")
       fontFamily: ui.fontFamily
     }
   }

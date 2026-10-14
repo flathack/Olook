@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import qs.Commons
 import qs.Ui
@@ -82,8 +83,8 @@ Item {
       width: parent.width
       horizontalAlignment: Text.AlignHCenter
       text: root.configured
-        ? "Sign in to " + (root.account ? root.account.email : "your account")
-        : "Add a mail account"
+        ? I18n.tr("Sign in to ") + (root.account ? root.account.email : "your account")
+        : I18n.tr("Add a mail account")
       color: ui.foreground
       font.family: ui.fontFamily
       font.pixelSize: Style.font.title
@@ -97,7 +98,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       visible: root.state === "idle" || root.state === "starting"
       text: root.configured
-        ? "This account needs a fresh sign-in before Olook can read its mail."
+        ? I18n.tr("This account needs a fresh sign-in before Olook can read its mail.")
         : "Gmail, Outlook.com, Microsoft 365, or any IMAP server — Olook finds the server settings for you."
       color: ui.dim
       font.family: ui.fontFamily
@@ -147,7 +148,7 @@ Item {
         textFormat: Text.PlainText
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
-        text: "The code is on your clipboard. Waiting for you to approve…"
+        text: I18n.tr("The code is on your clipboard. Waiting for you to approve…")
         color: ui.faint
         font.family: ui.fontFamily
         font.pixelSize: Style.font.caption
@@ -159,7 +160,7 @@ Item {
       width: parent.width
       horizontalAlignment: Text.AlignHCenter
       visible: root.state === "browser"
-      text: "Finish signing in in your browser…"
+      text: I18n.tr("Finish signing in in your browser…")
       color: ui.dim
       font.family: ui.fontFamily
       font.pixelSize: Style.font.bodySmall
@@ -184,11 +185,11 @@ Item {
 
       PrimaryButton {
         label: {
-          if (!root.configured) return "Add an account"
+          if (!root.configured) return I18n.tr("Add an account")
           if (root.state === "starting") return "Starting…"
-          if (root.state === "code" || root.state === "browser") return "Open sign-in page"
+          if (root.state === "code" || root.state === "browser") return I18n.tr("Open sign-in page")
           if (root.state === "error") return "Try again"
-          return "Sign in"
+          return I18n.tr("Sign in")
         }
         onTriggered: {
           if (!root.configured) root.addAccountRequested()
@@ -199,12 +200,12 @@ Item {
 
       SecondaryButton {
         visible: root.configured
-        label: "Add another account"
+        label: I18n.tr("Add another account")
         onTriggered: root.addAccountRequested()
       }
 
       SecondaryButton {
-        label: "Set up in a terminal"
+        label: I18n.tr("Set up in a terminal")
         onTriggered: if (root.service) root.service.openSetupTerminal()
       }
     }

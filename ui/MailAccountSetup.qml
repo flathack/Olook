@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import qs.Commons
 import qs.Ui
@@ -88,7 +89,7 @@ Item {
   function lookUp() {
     var address = root.emailText.trim()
     if (address.indexOf("@") < 1) {
-      root.errorText = "That does not look like an email address."
+      root.errorText = I18n.tr("That does not look like an email address.")
       return
     }
     root.errorText = ""
@@ -129,7 +130,7 @@ Item {
       smtpPort: parseInt(root.smtpPortText, 10) || 0
     }, function (ok, account) {
       if (!ok || !account) {
-        root.errorText = service.error || "Could not add the account."
+        root.errorText = service.error || I18n.tr("Could not add the account.")
         root.step = "settings"
         return
       }
@@ -176,7 +177,7 @@ Item {
     root.step = "testing"
     service.setPassword(root.newAccountId, secret, function (ok) {
       if (!ok) {
-        root.errorText = service.error || "Could not store the password."
+        root.errorText = service.error || I18n.tr("Could not store the password.")
         root.step = "password"
         return
       }
@@ -250,13 +251,13 @@ Item {
           width: parent.width
           text: {
             switch (root.step) {
-            case "address": case "looking": return "Add a mail account"
-            case "settings": case "adding": return "Server settings"
-            case "signin": return "Sign in with " + root.providerLabel(
+            case "address": case "looking": return I18n.tr("Add a mail account")
+            case "settings": case "adding": return I18n.tr("Server settings")
+            case "signin": return I18n.tr("Sign in with ") + root.providerLabel(
               root.found ? root.found.provider : "")
-            case "password": return "Password"
-            case "testing": return "Checking the connection…"
-            default: return root.succeeded ? "Account ready" : "Almost there"
+            case "password": return I18n.tr("Password")
+            case "testing": return I18n.tr("Checking the connection…")
+            default: return root.succeeded ? I18n.tr("Account ready") : I18n.tr("Almost there")
             }
           }
           color: ui.foreground
@@ -286,7 +287,7 @@ Item {
               return "Gmail and Outlook accounts with two-factor sign-in need "
                 + "an app password rather than your normal one."
             case "testing":
-              return "Signing in to " + root.imapHostText + " and "
+              return I18n.tr("Signing in to ") + root.imapHostText + " and "
                 + root.smtpHostText + "…"
             default:
               return root.succeeded
@@ -309,7 +310,7 @@ Item {
 
         SetupField {
           id: emailFieldRow
-          label: "Email address"
+          label: I18n.tr("Email address")
           placeholder: "you@example.com"
           input: emailField
 
@@ -331,8 +332,8 @@ Item {
         }
 
         SetupField {
-          label: "Your name"
-          placeholder: "Shown as the sender"
+          label: I18n.tr("Your name")
+          placeholder: I18n.tr("Shown as the sender")
           input: nameField
 
           TextInput {
@@ -365,17 +366,17 @@ Item {
           spacing: Style.space(4)
           visible: !root.editServers
 
-          SummaryRow { label: "Account"; value: root.emailText }
+          SummaryRow { label: I18n.tr("Account"); value: root.emailText }
           SummaryRow {
-            label: "Sign-in"
+            label: I18n.tr("Sign-in")
             value: root.authMode === "oauth2"
               ? root.providerLabel(root.found ? root.found.provider : "") + " sign-in"
-              : "Password"
+              : I18n.tr("Password")
           }
           SummaryRow { label: "IMAP"; value: root.imapHostText + ":" + root.imapPortText }
           SummaryRow { label: "SMTP"; value: root.smtpHostText + ":" + root.smtpPortText }
           SummaryRow {
-            label: "Note"
+            label: I18n.tr("Note")
             value: root.found && root.found.note ? String(root.found.note) : ""
             visible: value !== ""
           }
@@ -387,7 +388,7 @@ Item {
           visible: root.editServers
 
           SetupField {
-            label: "IMAP server"
+            label: I18n.tr("IMAP server")
             placeholder: "imap.example.com"
             input: imapHostField
             TextInput {
@@ -405,7 +406,7 @@ Item {
           }
 
           SetupField {
-            label: "IMAP port"
+            label: I18n.tr("IMAP port")
             placeholder: "993"
             input: imapPortField
             TextInput {
@@ -424,7 +425,7 @@ Item {
           }
 
           SetupField {
-            label: "SMTP server"
+            label: I18n.tr("SMTP server")
             placeholder: "smtp.example.com"
             input: smtpHostField
             TextInput {
@@ -442,7 +443,7 @@ Item {
           }
 
           SetupField {
-            label: "SMTP port"
+            label: I18n.tr("SMTP port")
             placeholder: "587"
             input: smtpPortField
             TextInput {
@@ -470,12 +471,12 @@ Item {
             label: root.providerLabel(root.found ? root.found.provider : "") + " sign-in"
             mode: "oauth2"
           }
-          AuthChip { label: "Password"; mode: "password" }
+          AuthChip { label: I18n.tr("Password"); mode: "password" }
         }
 
         Text {
           textFormat: Text.PlainText
-          text: root.editServers ? "Use the detected settings" : "Edit server settings"
+          text: root.editServers ? I18n.tr("Use the detected settings") : I18n.tr("Edit server settings")
           color: ui.accent
           font.family: ui.fontFamily
           font.pixelSize: Style.font.bodySmall
@@ -498,7 +499,7 @@ Item {
           textFormat: Text.PlainText
           width: parent.width
           visible: root.userCode !== ""
-          text: "Open " + root.verificationUri + " and enter this code — it is "
+          text: I18n.tr("Open ") + root.verificationUri + " and enter this code — it is "
             + "already on your clipboard."
           color: ui.dim
           font.family: ui.fontFamily
@@ -532,8 +533,8 @@ Item {
           width: parent.width
           visible: root.userCode === "" && root.errorText === ""
           text: root.verificationUri === ""
-            ? "Starting the sign-in…"
-            : "Finish signing in in your browser, then come back here."
+            ? I18n.tr("Starting the sign-in…")
+            : I18n.tr("Finish signing in in your browser, then come back here.")
           color: ui.dim
           font.family: ui.fontFamily
           font.pixelSize: Style.font.bodySmall
@@ -548,8 +549,8 @@ Item {
         visible: root.step === "password"
 
         SetupField {
-          label: "Password"
-          placeholder: "Password or app password"
+          label: I18n.tr("Password")
+          placeholder: I18n.tr("Password or app password")
           input: passwordField
 
           TextInput {
@@ -599,15 +600,15 @@ Item {
           primary: true
           label: {
             switch (root.step) {
-            case "address": return "Continue"
-            case "looking": return "Looking up…"
-            case "settings": return "Add account"
-            case "adding": return "Adding…"
+            case "address": return I18n.tr("Continue")
+            case "looking": return I18n.tr("Looking up…")
+            case "settings": return I18n.tr("Add account")
+            case "adding": return I18n.tr("Adding…")
             case "signin": return root.errorText !== "" ? "Try again"
-              : (root.verificationUri === "" ? "Starting…" : "Open sign-in page")
-            case "password": return "Sign in"
+              : (root.verificationUri === "" ? "Starting…" : I18n.tr("Open sign-in page"))
+            case "password": return I18n.tr("Sign in")
             case "testing": return "Checking…"
-            default: return root.succeeded ? "Go to inbox" : "Open anyway"
+            default: return root.succeeded ? I18n.tr("Go to inbox") : I18n.tr("Open anyway")
             }
           }
           enabled: {
@@ -636,7 +637,7 @@ Item {
         }
 
         SetupButton {
-          label: root.step === "done" ? "Add another" : "Cancel"
+          label: root.step === "done" ? I18n.tr("Add another") : I18n.tr("Cancel")
           enabled: !root.busy
           onTriggered: {
             if (root.step === "done") root.reset()
@@ -648,7 +649,7 @@ Item {
         // again, and a failed test is exactly when you want that.
         SetupButton {
           visible: root.step === "done" && !root.succeeded
-          label: "Retry sign-in"
+          label: I18n.tr("Retry sign-in")
           onTriggered: {
             if (root.authMode === "oauth2") { root.step = "signin"; root.startOAuth() }
             else { root.step = "password"; root.errorText = "" }

@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
@@ -251,21 +252,21 @@ Item {
 
   function saveDraft() {
     root.draftProblem = ""
-    if (root.draftTitle.trim() === "") { root.draftProblem = "It needs a name."; return }
+    if (root.draftTitle.trim() === "") { root.draftProblem = I18n.tr("It needs a name."); return }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(root.draftDay)) {
-      root.draftProblem = "The day should look like 2026-09-22."; return
+      root.draftProblem = I18n.tr("The day should look like 2026-09-22."); return
     }
     if (!root.draftAllDay) {
       if (!root.validTime(root.draftFrom) || !root.validTime(root.draftUntil)) {
-        root.draftProblem = "Times should look like 14:30."; return
+        root.draftProblem = I18n.tr("Times should look like 14:30."); return
       }
       function minutes(t) { var p = t.split(":"); return Number(p[0]) * 60 + Number(p[1]) }
       if (minutes(root.draftUntil) <= minutes(root.draftFrom)) {
-        root.draftProblem = "It has to end after it starts."; return
+        root.draftProblem = I18n.tr("It has to end after it starts."); return
       }
     }
     var parts = root.draftCalendar.split("|")
-    if (parts.length < 2) { root.draftProblem = "Pick a calendar for it."; return }
+    if (parts.length < 2) { root.draftProblem = I18n.tr("Pick a calendar for it."); return }
     var account = parts[0]
     var calendar = parts.slice(1).join("|")
     function pad(t) { var p = t.split(":"); return Model.pad(Number(p[0])) + ":" + p[1] }
@@ -336,7 +337,7 @@ Item {
     function nameOf(id) {
       // Calendars read from a file belong to no mailbox, so they are grouped
       // under where they came from rather than under an address.
-      if (id === "local") return "On this computer"
+      if (id === "local") return I18n.tr("On this computer")
       var servers = root.service ? root.service.calendarServers : []
       for (var n = 0; n < servers.length; n++)
         if (servers[n].id === id) return servers[n].name || servers[n].url
@@ -480,7 +481,7 @@ Item {
             id: todayText
             textFormat: Text.PlainText
             anchors.centerIn: parent
-            text: "Today"
+            text: I18n.tr("Today")
             color: ui.foreground
             font.family: ui.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -606,7 +607,7 @@ Item {
 
         PanelToolTip {
           visible: refreshHover.containsMouse
-          text: "Fetch this month from your accounts"
+          text: I18n.tr("Fetch this month from your accounts")
           fontFamily: ui.fontFamily
         }
       }
@@ -639,7 +640,7 @@ Item {
               textFormat: Text.PlainText
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: "Calendars"
+              text: I18n.tr("Calendars")
               color: ui.dim
               font.family: ui.fontFamily
               font.pixelSize: Style.font.bodySmall
@@ -674,7 +675,7 @@ Item {
 
               PanelToolTip {
                 visible: addCalendarHover.containsMouse
-                text: "Add a calendar from a file, a link or a CalDAV server"
+                text: I18n.tr("Add a calendar from a file, a link or a CalDAV server")
                 fontFamily: ui.fontFamily
               }
             }
@@ -690,13 +691,13 @@ Item {
               spacing: Style.space(5)
 
               PanelChip {
-                label: "File or link"
+                label: I18n.tr("File or link")
                 accent: root.addKind === "file"
                 onTriggered: root.addKind = "file"
               }
 
               PanelChip {
-                label: "Server"
+                label: I18n.tr("Server")
                 accent: root.addKind === "server"
                 onTriggered: root.addKind = "server"
               }
@@ -705,14 +706,14 @@ Item {
             CalendarField {
               id: nameField
               width: parent.width
-              placeholder: "Name"
+              placeholder: I18n.tr("Name")
               onEdited: function (value) { root.draftName = value }
             }
 
             CalendarField {
               id: sourceField
               width: parent.width
-              placeholder: root.addKind === "server" ? "Server address"
+              placeholder: root.addKind === "server" ? I18n.tr("Server address")
                                                      : "File path or https:// link"
               onEdited: function (value) { root.draftSource = value }
             }
@@ -730,7 +731,7 @@ Item {
               width: parent.width
               visible: root.addKind === "server"
               password: true
-              placeholder: "Password or app password"
+              placeholder: I18n.tr("Password or app password")
               onEdited: function (value) { root.draftPassword = value }
             }
 
@@ -739,12 +740,12 @@ Item {
 
               PanelChip {
                 visible: root.addKind === "file"
-                label: "Browse…"
+                label: I18n.tr("Browse…")
                 onTriggered: calendarPicker.open()
               }
 
               PanelChip {
-                label: "Add"
+                label: I18n.tr("Add")
                 accent: true
                 onTriggered: root.commitCalendar()
               }
@@ -793,7 +794,7 @@ Item {
                 anchors.rightMargin: Style.space(2)
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: Style.space(3)
-                text: "Remove"
+                text: I18n.tr("Remove")
                 color: serverForgetHover.containsMouse ? ui.urgent : ui.faint
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.caption
@@ -894,7 +895,7 @@ Item {
 
                   PanelToolTip {
                     visible: forgetHover.containsMouse
-                    text: "Stop showing this calendar"
+                    text: I18n.tr("Stop showing this calendar")
                     fontFamily: ui.fontFamily
                   }
                 }
@@ -1088,7 +1089,7 @@ Item {
                     visible: cell.items.length > cell.shown
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
-                    text: "+" + (cell.items.length - cell.shown) + " more"
+                    text: "+" + (cell.items.length - cell.shown) + I18n.tr(" more")
                     color: ui.faint
                     font.family: ui.fontFamily
                     font.pixelSize: Style.font.bodySmall
@@ -1164,7 +1165,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: root.editingEvent ? "Change appointment" : "New appointment"
+              text: root.editingEvent ? I18n.tr("Change appointment") : I18n.tr("New appointment")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.body
@@ -1173,7 +1174,7 @@ Item {
             CalendarField {
               id: titleField
               width: parent.width
-              placeholder: "What is it?"
+              placeholder: I18n.tr("What is it?")
               onEdited: function (value) { root.draftTitle = value }
             }
 
@@ -1211,13 +1212,13 @@ Item {
             CalendarField {
               id: placeField
               width: parent.width
-              placeholder: "Where (optional)"
+              placeholder: I18n.tr("Where (optional)")
               onEdited: function (value) { root.draftLocation = value }
             }
 
             Text {
               textFormat: Text.PlainText
-              text: "Calendar"
+              text: I18n.tr("Calendar")
               color: ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.caption
@@ -1269,12 +1270,12 @@ Item {
               spacing: Style.space(6)
 
               PanelChip {
-                label: "Save"
+                label: I18n.tr("Save")
                 accent: true
                 onTriggered: root.saveDraft()
               }
               PanelChip {
-                label: "Cancel"
+                label: I18n.tr("Cancel")
                 onTriggered: root.composing = false
               }
             }
@@ -1323,7 +1324,7 @@ Item {
               Text {
                 textFormat: Text.PlainText
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Back to the day"
+                text: I18n.tr("Back to the day")
                 color: ui.dim
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.caption
@@ -1354,7 +1355,7 @@ Item {
                 textFormat: Text.PlainText
                 wrapMode: Text.Wrap
                 text: root.openEvent
-                  ? (root.openEvent.summary || "(no title)") : ""
+                  ? (root.openEvent.summary || I18n.tr("(no title)")) : ""
                 color: ui.foreground
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.body
@@ -1363,29 +1364,29 @@ Item {
 
             EventLine {
               width: parent.width
-              label: "When"
+              label: I18n.tr("When")
               value: root.openEvent ? root.whenText(root.openEvent) : ""
             }
             EventLine {
               width: parent.width
-              label: "Where"
+              label: I18n.tr("Where")
               value: root.openEvent ? (root.openEvent.location || "") : ""
             }
             EventLine {
               width: parent.width
-              label: "Organiser"
+              label: I18n.tr("Organiser")
               value: root.openEvent ? (root.openEvent.organiser || "") : ""
             }
             EventLine {
               width: parent.width
-              label: "Calendar"
+              label: I18n.tr("Calendar")
               value: root.openEvent ? (root.openEvent.calendarName || "") : ""
             }
             EventLine {
               width: parent.width
-              label: "Repeats"
+              label: I18n.tr("Repeats")
               value: !!(root.openEvent && root.openEvent.recurring)
-                ? "One of a series" : ""
+                ? I18n.tr("One of a series") : ""
             }
 
             Rectangle {
@@ -1421,7 +1422,7 @@ Item {
             PanelChip {
               visible: !!(root.openEvent && !root.openEvent.readOnly
                           && root.openEvent.account !== "local")
-              label: root.confirmingDelete ? "Really delete?" : "\udb82\ude7a  Delete"
+              label: root.confirmingDelete ? I18n.tr("Really delete?") : "\udb82\ude7a  Delete"
               onTriggered: {
                 if (root.confirmingDelete) {
                   root.confirmingDelete = false
@@ -1457,12 +1458,12 @@ Item {
             visible: root.eventsOn(root.selected).length === 0
             wrapMode: Text.Wrap
             text: root.service && !root.service.canReadCalendar
-              ? "No account here keeps a calendar."
+              ? I18n.tr("No account here keeps a calendar.")
               : (root.needSignIn.length > 0
-                 ? "One sign-in per account covers its calendar and its contacts."
+                 ? I18n.tr("One sign-in per account covers its calendar and its contacts.")
                  : (root.events.length === 0
-                    ? "Nothing fetched yet — press the refresh button above."
-                    : "Nothing on this day."))
+                    ? I18n.tr("Nothing fetched yet — press the refresh button above.")
+                    : I18n.tr("Nothing on this day.")))
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -1524,7 +1525,7 @@ Item {
                 anchors.centerIn: parent
                 textFormat: Text.PlainText
                 text: root.service && root.service.extrasAuthorizing
-                  ? "Signing in…"
+                  ? I18n.tr("Signing in…")
                   : "Sign in — " + (modelData.email || modelData.id)
                 color: ui.accent
                 font.family: ui.fontFamily
@@ -1592,7 +1593,7 @@ Item {
                 Text {
                   textFormat: Text.PlainText
                   anchors.verticalCenter: parent.verticalCenter
-                  text: modelData.allDay ? "All day" : root.clock(modelData)
+                  text: modelData.allDay ? I18n.tr("All day") : root.clock(modelData)
                   color: ui.dim
                   font.family: ui.fontFamily
                   font.pixelSize: Style.font.bodySmall
@@ -1603,7 +1604,7 @@ Item {
                 width: parent.width
                 textFormat: Text.PlainText
                 wrapMode: Text.Wrap
-                text: modelData.summary || "(no title)"
+                text: modelData.summary || I18n.tr("(no title)")
                 color: ui.foreground
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.bodySmall
@@ -1675,7 +1676,7 @@ Item {
 
   FileDialog {
     id: calendarPicker
-    title: "Choose a calendar file"
+    title: I18n.tr("Choose a calendar file")
     nameFilters: ["Calendars (*.ics *.ical *.ifb)", "All files (*)"]
     onAccepted: {
       var path = String(calendarPicker.selectedFile).replace(/^file:\/\//, "")

@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -109,20 +110,20 @@ FloatingWindow {
           width: parent.width - Style.space(14)
           textFormat: Text.PlainText
           wrapMode: Text.Wrap
-          text: window.entry ? (window.entry.summary || "(no title)") : ""
+          text: window.entry ? (window.entry.summary || I18n.tr("(no title)")) : ""
           color: window.ui ? window.ui.foreground : "white"
           font.family: window.ui ? window.ui.fontFamily : Style.font.family
           font.pixelSize: Style.font.title
         }
       }
 
-      Line { label: "When"; value: window.whenText }
-      Line { label: "Where"; value: window.entry ? (window.entry.location || "") : "" }
-      Line { label: "Organiser"; value: window.entry ? (window.entry.organiser || "") : "" }
-      Line { label: "Calendar"; value: window.entry ? (window.entry.calendarName || "") : "" }
+      Line { label: I18n.tr("When"); value: window.whenText }
+      Line { label: I18n.tr("Where"); value: window.entry ? (window.entry.location || "") : "" }
+      Line { label: I18n.tr("Organiser"); value: window.entry ? (window.entry.organiser || "") : "" }
+      Line { label: I18n.tr("Calendar"); value: window.entry ? (window.entry.calendarName || "") : "" }
       Line {
-        label: "Repeats"
-        value: window.entry && window.entry.recurring ? "One of a series" : ""
+        label: I18n.tr("Repeats")
+        value: window.entry && window.entry.recurring ? I18n.tr("One of a series") : ""
       }
 
       Rectangle {
@@ -178,11 +179,11 @@ FloatingWindow {
       spacing: Style.space(8)
 
       FooterButton {
-        label: "Show in calendar"
+        label: I18n.tr("Show in calendar")
         onTriggered: window.calendarRequested(window.entry)
       }
       FooterButton {
-        label: "Close"
+        label: I18n.tr("Close")
         onTriggered: window.visible = false
       }
     }

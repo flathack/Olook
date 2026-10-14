@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import qs.Commons
@@ -71,7 +72,7 @@ Item {
     Drag.hotSpot.y: 0
     Text {
       anchors.centerIn: parent
-      text: mailDrag.entries.length + " message(s)"
+      text: mailDrag.entries.length + I18n.tr(" message(s)")
       color: ui.foreground
       font.family: ui.fontFamily
       font.pixelSize: Style.font.body
@@ -114,9 +115,9 @@ Item {
         spacing: Style.space(4)
         visible: !tabs.picking
 
-        FilterTab { label: "All"; mode: "all" }
-        FilterTab { label: "Unread"; mode: "unread" }
-        FilterTab { label: "Flagged"; mode: "flagged" }
+        FilterTab { label: I18n.tr("All"); mode: "all" }
+        FilterTab { label: I18n.tr("Unread"); mode: "unread" }
+        FilterTab { label: I18n.tr("Flagged"); mode: "flagged" }
       }
 
       Row {
@@ -131,20 +132,20 @@ Item {
         Text {
           textFormat: Text.PlainText
           anchors.verticalCenter: parent.verticalCenter
-          text: root.selectedKeys.length + " selected"
+          text: root.selectedKeys.length + I18n.tr(" selected")
           color: ui.accent
           font.family: ui.fontFamily
           font.pixelSize: Style.font.caption
           font.bold: true
         }
 
-        BulkButton { glyph: "󰉒"; hint: "Move to folder"; action: "move" }
-        BulkButton { glyph: "󰀼"; hint: "Archive"; action: "archive" }
-        BulkButton { glyph: "󰆴"; hint: "Delete"; action: "delete" }
-        BulkButton { glyph: "󰇮"; hint: "Mark read"; action: "read" }
-        BulkButton { glyph: "󰛑"; hint: "Mark unread"; action: "unread" }
-        BulkButton { glyph: "󰈻"; hint: "Flag"; action: "flag" }
-        BulkButton { glyph: "󰅖"; hint: "Clear selection"; action: "clear" }
+        BulkButton { glyph: "󰉒"; hint: I18n.tr("Move to folder"); action: "move" }
+        BulkButton { glyph: "󰀼"; hint: I18n.tr("Archive"); action: "archive" }
+        BulkButton { glyph: "󰆴"; hint: I18n.tr("Delete"); action: "delete" }
+        BulkButton { glyph: "󰇮"; hint: I18n.tr("Mark read"); action: "read" }
+        BulkButton { glyph: "󰛑"; hint: I18n.tr("Mark unread"); action: "unread" }
+        BulkButton { glyph: "󰈻"; hint: I18n.tr("Flag"); action: "flag" }
+        BulkButton { glyph: "󰅖"; hint: I18n.tr("Clear selection"); action: "clear" }
       }
 
       Text {
@@ -360,7 +361,7 @@ Item {
                   anchors.right: markers.left
                   anchors.rightMargin: Style.space(6)
                   text: rowItem.modelData
-                    ? String(rowItem.modelData.subject || "(no subject)") : ""
+                    ? String(rowItem.modelData.subject || I18n.tr("(no subject)")) : ""
                   color: rowItem.modelData && !rowItem.modelData.seen
                     ? ui.foreground : ui.dim
                   font.family: ui.fontFamily
@@ -492,19 +493,19 @@ Item {
           horizontalAlignment: Text.AlignHCenter
           text: {
             if (!root.service) return ""
-            if (root.service.loading) return "Loading…"
-            if (!root.service.configured) return "No account yet"
-            if (root.service.query !== "") return "Nothing matches that search"
-            if (root.service.filter === "unread") return "No unread mail"
-            if (root.service.filter === "flagged") return "Nothing flagged"
+            if (root.service.loading) return I18n.tr("Loading…")
+            if (!root.service.configured) return I18n.tr("No account yet")
+            if (root.service.query !== "") return I18n.tr("Nothing matches that search")
+            if (root.service.filter === "unread") return I18n.tr("No unread mail")
+            if (root.service.filter === "flagged") return I18n.tr("Nothing flagged")
             // The tree's count comes from the server, the list from what has
             // been fetched. Calling a folder empty when the server says it
             // holds thousands is the one answer that is certainly wrong.
             if (root.service.currentFolderTotal > 0)
               return root.service.syncing
-                ? "Fetching this folder…"
-                : "Nothing fetched from this folder yet — press g to fetch it"
-            return "This folder is empty"
+                ? I18n.tr("Fetching this folder…")
+                : I18n.tr("Nothing fetched from this folder yet — press g to fetch it")
+            return I18n.tr("This folder is empty")
           }
           color: ui.dim
           font.family: ui.fontFamily

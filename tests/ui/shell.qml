@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtTest
 import Quickshell
 import "ui"
+import "ui/Model.js" as Model
+import "ui/I18n.js" as I18n
 ShellRoot {
   QtObject {
     id: style
@@ -97,6 +99,11 @@ ShellRoot {
           return null
         }
         function test_interactions() {
+          assertEqual(I18n.tr("Reply"), "Antworten", "German action label")
+          assertEqual(I18n.tr("Uncatalogued text"), "Uncatalogued text", "Unknown text stays unchanged")
+          assertEqual(Model.folderLabel({name:"INBOX", special:"inbox"}), "Posteingang", "German display folder")
+          var date = new Date(2026, 9, 14, 12, 30)
+          assertEqual(Model.fullTime(date.getTime()/1000), "Mittwoch 14 Oktober 2026 um 12:30", "German full timestamp")
           wait(500)
           mouseClick(list, 100, 70, Qt.LeftButton)
           menu.popup(surface, 250, 50)

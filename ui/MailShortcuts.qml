@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import qs.Commons
@@ -16,32 +17,32 @@ Item {
   // Two columns of { keys, does }, laid out as one list per column so a short
   // window scrolls rather than clipping.
   readonly property var sections: [
-    { title: "Reading", keys: [
-      ["j / k    ↓ / ↑", "Move through the list"],
-      ["Enter", "Open the selected message"],
-      ["Tab", "Folder pane → list → reading pane"],
+    { title: I18n.tr("Reading"), keys: [
+      ["j / k    ↓ / ↑", I18n.tr("Move through the list")],
+      ["Enter", I18n.tr("Open the selected message")],
+      ["Tab", I18n.tr("Folder pane → list → reading pane")],
       ["/", "Search"],
-      ["g", "Check for new mail"],
+      ["g", I18n.tr("Check for new mail")],
       ["Esc", "Back, then clear search, then close"]
     ] },
-    { title: "Acting on a message", keys: [
-      ["r  /  a", "Reply / reply all"],
-      ["f", "Forward"],
-      ["e", "Archive"],
-      ["Del", "Delete"],
-      ["s", "Flag"],
-      ["u", "Mark read or unread"]
+    { title: I18n.tr("Acting on a message"), keys: [
+      ["r  /  a", I18n.tr("Reply / reply all")],
+      ["f", I18n.tr("Forward")],
+      ["e", I18n.tr("Archive")],
+      ["Del", I18n.tr("Delete")],
+      ["s", I18n.tr("Flag")],
+      ["u", I18n.tr("Mark read or unread")]
     ] },
-    { title: "Writing", keys: [
-      ["c", "New message"],
-      ["Ctrl+N", "New message in its own window"],
-      ["Ctrl+Enter", "Send"],
-      ["Ctrl+Shift+A", "Attach files"],
-      ["Ctrl+Shift+O", "Move this draft to its own window"]
+    { title: I18n.tr("Writing"), keys: [
+      ["c", I18n.tr("New message")],
+      ["Ctrl+N", I18n.tr("New message in its own window")],
+      ["Ctrl+Enter", I18n.tr("Send")],
+      ["Ctrl+Shift+A", I18n.tr("Attach files")],
+      ["Ctrl+Shift+O", I18n.tr("Move this draft to its own window")]
     ] },
-    { title: "The window", keys: [
-      ["F10", "Menus — then ← → and ↑ ↓"],
-      ["Ctrl+,", "Settings"],
+    { title: I18n.tr("The window"), keys: [
+      ["F10", I18n.tr("Menus — then ← → and ↑ ↓")],
+      ["Ctrl+,", I18n.tr("Settings")],
       ["?", "This list"]
     ] }
   ]
@@ -96,7 +97,7 @@ Item {
             textFormat: Text.PlainText
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            text: "Keyboard shortcuts"
+            text: I18n.tr("Keyboard shortcuts")
             color: ui.foreground
             font.family: ui.fontFamily
             font.pixelSize: Style.font.title
@@ -107,7 +108,7 @@ Item {
             textFormat: Text.PlainText
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: "Esc to close"
+            text: I18n.tr("Esc to close")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption

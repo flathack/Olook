@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -127,8 +128,8 @@ Item {
   // them may assume there is a row.
   function statusText(row) {
     if (!row) return ""
-    if (row.demo) return "Sample data"
-    if (!row.authorized) return "Needs sign-in"
+    if (row.demo) return I18n.tr("Sample data")
+    if (!row.authorized) return I18n.tr("Needs sign-in")
     if (!row.enabled) return "Paused"
     return "Signed in"
   }
@@ -208,13 +209,13 @@ Item {
           SettingsButton {
             primary: true
             glyph: "󰐕"
-            label: "Add account"
+            label: I18n.tr("Add account")
             onTriggered: root.startAdd()
           }
 
           Item { width: 1; height: Style.space(8) }
 
-          NavHeading { text: "Accounts" }
+          NavHeading { text: I18n.tr("Accounts") }
 
           Repeater {
             model: root.rows
@@ -231,7 +232,7 @@ Item {
             width: parent.width
             visible: root.rows.length === 0
             leftPadding: Style.space(10)
-            text: "None yet."
+            text: I18n.tr("None yet.")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -239,12 +240,12 @@ Item {
 
           Item { width: 1; height: Style.space(10) }
 
-          NavHeading { text: "Client" }
+          NavHeading { text: I18n.tr("Client") }
 
-          NavItem { section: "general"; glyph: "󰒓"; label: "General" }
-          NavItem { section: "rules"; glyph: "\uDB80\uDE32"; label: "Rules" }
-          NavItem { section: "calendar"; glyph: "󰃭"; label: "Calendar" }
-          NavItem { section: "widget"; glyph: "󰍜"; label: "Bar widget" }
+          NavItem { section: "general"; glyph: "󰒓"; label: I18n.tr("General") }
+          NavItem { section: "rules"; glyph: "\uDB80\uDE32"; label: I18n.tr("Rules") }
+          NavItem { section: "calendar"; glyph: "󰃭"; label: I18n.tr("Calendar") }
+          NavItem { section: "widget"; glyph: "󰍜"; label: I18n.tr("Bar widget") }
         }
 
         MomentumScroll { view: navFlick }
@@ -293,7 +294,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: "General"
+              text: I18n.tr("General")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.title
@@ -306,7 +307,7 @@ Item {
             // rather than hidden behind a switch labelled "safe".
             Text {
               textFormat: Text.PlainText
-              text: "Pictures in messages"
+              text: I18n.tr("Pictures in messages")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.subtitle
@@ -318,20 +319,20 @@ Item {
 
               PolicyChoice {
                 value: "verified"
-                label: "Any verified sender"
+                label: I18n.tr("Any verified sender")
                 hint: "Opt in: even unfamiliar senders can sign their own mail. "
-                      + "Opening it may load a tracking pixel."
+                      + I18n.tr("Opening it may load a tracking pixel.")
               }
 
               PolicyChoice {
                 value: "trusted"
-                label: "Named and verified senders"
+                label: I18n.tr("Named and verified senders")
                 hint: "The sender must be on your list and pass DKIM or DMARC."
               }
 
               PolicyChoice {
                 value: "never"
-                label: "Never, always ask (default)"
+                label: I18n.tr("Never, always ask (default)")
                 hint: "Every message offers the button and none acts on its own."
               }
             }
@@ -351,7 +352,7 @@ Item {
 
               Text {
                 textFormat: Text.PlainText
-                text: "Finish setup"
+                text: I18n.tr("Finish setup")
                 color: ui.foreground
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -359,16 +360,16 @@ Item {
 
               SetupLine {
                 done: !!(setupBlock.state && setupBlock.state.cli.ok)
-                label: "The olook command in a terminal"
+                label: I18n.tr("The olook command in a terminal")
               }
               SetupLine {
                 done: setupBlock.renderReady
                 label: {
                   var r = setupBlock.state ? setupBlock.state.renderer : null
-                  if (!r || (r.active && !r.stale)) return "Mail rendered as HTML"
-                  if (!r.built) return "Mail rendered as HTML" + (r.compiler ? "" : " — needs gcc")
+                  if (!r || (r.active && !r.stale)) return I18n.tr("Mail rendered as HTML")
+                  if (!r.built) return I18n.tr("Mail rendered as HTML") + (r.compiler ? "" : " — needs gcc")
                   if (r.stale) return "Remove the old session-wide LD_PRELOAD line"
-                  if (r.configured) return "Mail rendered as HTML — restart the shell to start it"
+                  if (r.configured) return I18n.tr("Mail rendered as HTML — restart the shell to start it")
                   return "Mail rendered as HTML — add this PATH line to "
                     + "~/.config/hypr/hyprland.lua, then restart the shell:"
                 }
@@ -404,24 +405,24 @@ Item {
                   font.pixelSize: Style.font.caption
                 }
                 SettingsButton {
-                  label: "Copy"
+                  label: I18n.tr("Copy")
                   onTriggered: Quickshell.execDetached(["wl-copy", setupBlock.state.renderer.line])
                 }
               }
               SetupLine {
                 done: !!(setupBlock.state && setupBlock.state.mailto.ok)
-                label: "mailto: links open Olook"
+                label: I18n.tr("mailto: links open Olook")
               }
               SetupLine {
                 done: !!(setupBlock.state && setupBlock.state.launcher
                          && setupBlock.state.launcher.ok)
-                label: "Olook in the app menu"
+                label: I18n.tr("Olook in the app menu")
               }
 
               SettingsButton {
                 primary: true
                 glyph: "\uF0AD"
-                label: service.settingUp ? "Setting up…" : "Finish setup"
+                label: service.settingUp ? I18n.tr("Setting up…") : I18n.tr("Finish setup")
                 enabled: !service.settingUp
                 onTriggered: service.finishSetup(null)
               }
@@ -435,7 +436,7 @@ Item {
 
               Text {
                 textFormat: Text.PlainText
-                text: "Waiting to be sent"
+                text: I18n.tr("Waiting to be sent")
                 color: ui.foreground
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -459,7 +460,7 @@ Item {
                       width: parent.width
                       textFormat: Text.PlainText
                       elide: Text.ElideRight
-                      text: String(modelData.subject || "(no subject)")
+                      text: String(modelData.subject || I18n.tr("(no subject)"))
                       color: ui.foreground
                       font.family: ui.fontFamily
                       font.pixelSize: Style.font.bodySmall
@@ -472,7 +473,7 @@ Item {
                       text: (modelData.sendAt > Date.now() / 1000
                         ? "Goes out " + Qt.formatDateTime(new Date(modelData.sendAt * 1000),
                                                           "ddd d MMM, HH:mm")
-                        : "Waiting for a connection")
+                        : I18n.tr("Waiting for a connection"))
                         + ((modelData.to || []).length > 0 ? " — to " + modelData.to.join(", ") : "")
                       color: ui.faint
                       font.family: ui.fontFamily
@@ -484,7 +485,7 @@ Item {
                     id: outboxCancel
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    label: "Back to Drafts"
+                    label: I18n.tr("Back to Drafts")
                     onTriggered: service.cancelScheduled(modelData.path)
                   }
                 }
@@ -492,15 +493,15 @@ Item {
             }
 
             InfoRow {
-              label: "Accounts file"
+              label: I18n.tr("Accounts file")
               value: "~/.config/olook/accounts.json"
-              hint: "Passwords and tokens live in the keyring, never in this file."
+              hint: I18n.tr("Passwords and tokens live in the keyring, never in this file.")
             }
 
             InfoRow {
-              label: "Mail cache"
+              label: I18n.tr("Mail cache")
               value: "~/.local/state/olook/mail.db"
-              hint: "Removing an account deletes its cached mail with it."
+              hint: I18n.tr("Removing an account deletes its cached mail with it.")
             }
 
             Row {
@@ -509,7 +510,7 @@ Item {
 
               SettingsButton {
                 glyph: "󰑐"
-                label: "Check all accounts now"
+                label: I18n.tr("Check all accounts now")
                 onTriggered: {
                   for (var i = 0; i < root.rows.length; i++) {
                     if (root.rows[i].enabled && !root.rows[i].demo)
@@ -520,7 +521,7 @@ Item {
 
               SettingsButton {
                 glyph: "󰆍"
-                label: "Advanced setup in a terminal"
+                label: I18n.tr("Advanced setup in a terminal")
                 onTriggered: service.openSetupTerminal()
               }
             }
@@ -543,7 +544,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: "Rules"
+              text: I18n.tr("Rules")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.title
@@ -565,7 +566,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               visible: service.rules.length === 0
-              text: "No rules yet."
+              text: I18n.tr("No rules yet.")
               color: ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.bodySmall
@@ -609,7 +610,7 @@ Item {
                   anchors.verticalCenter: parent.verticalCenter
                   danger: true
                   glyph: "\uDB82\uDE7A"
-                  label: "Remove"
+                  label: I18n.tr("Remove")
                   onTriggered: service.removeRule(modelData.index)
                 }
               }
@@ -618,42 +619,42 @@ Item {
             Text {
               textFormat: Text.PlainText
               topPadding: Style.space(8)
-              text: "New rule"
+              text: I18n.tr("New rule")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.subtitle
             }
 
             SettingsField {
-              label: "When the sender contains"
+              label: I18n.tr("When the sender contains")
               placeholder: "newsletter@example.com, or just example.com"
               input: ruleFrom
               RuleInput { id: ruleFrom }
             }
 
             SettingsField {
-              label: "When a recipient contains"
+              label: I18n.tr("When a recipient contains")
               placeholder: "list@example.com"
               input: ruleTo
               RuleInput { id: ruleTo }
             }
 
             SettingsField {
-              label: "When the subject contains"
+              label: I18n.tr("When the subject contains")
               placeholder: "[ci]"
               input: ruleSubject
               RuleInput { id: ruleSubject }
             }
 
             SettingsField {
-              label: "Move it to the folder"
-              placeholder: "Folder name, as the account names it"
+              label: I18n.tr("Move it to the folder")
+              placeholder: I18n.tr("Folder name, as the account names it")
               input: ruleMove
               RuleInput { id: ruleMove }
             }
 
             SettingsField {
-              label: "Give it the category"
+              label: I18n.tr("Give it the category")
               placeholder: "Receipts"
               input: ruleCategory
               RuleInput { id: ruleCategory }
@@ -679,7 +680,7 @@ Item {
                 Text {
                   textFormat: Text.PlainText
                   anchors.verticalCenter: parent.verticalCenter
-                  text: "Mark it as read"
+                  text: I18n.tr("Mark it as read")
                   color: ui.foreground
                   font.family: ui.fontFamily
                   font.pixelSize: Style.font.bodySmall
@@ -699,7 +700,7 @@ Item {
               SettingsButton {
                 primary: true
                 glyph: "\uDB81\uDC15"
-                label: rulesPage.busy ? "Adding…" : "Add rule"
+                label: rulesPage.busy ? I18n.tr("Adding…") : I18n.tr("Add rule")
                 enabled: rulesPage.hasCondition && rulesPage.hasAction && !rulesPage.busy
                 onTriggered: {
                   rulesPage.busy = true
@@ -721,8 +722,8 @@ Item {
                 textFormat: Text.PlainText
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !rulesPage.hasCondition || !rulesPage.hasAction
-                text: !rulesPage.hasCondition ? "Fill in at least one condition."
-                                              : "Choose what should happen."
+                text: !rulesPage.hasCondition ? I18n.tr("Fill in at least one condition.")
+                                              : I18n.tr("Choose what should happen.")
                 color: ui.faint
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.caption
@@ -738,7 +739,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: "Calendar"
+              text: I18n.tr("Calendar")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.title
@@ -746,7 +747,7 @@ Item {
             }
 
             InfoRow {
-              label: "Calendars"
+              label: I18n.tr("Calendars")
               value: {
                 var shown = 0
                 for (var i = 0; i < service.calendars.length; i++)
@@ -761,7 +762,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               topPadding: Style.space(8)
-              text: "Clock & calendar in the bar"
+              text: I18n.tr("Clock & calendar in the bar")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.body
@@ -785,7 +786,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: "Bar widget"
+              text: I18n.tr("Bar widget")
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.title
@@ -1050,7 +1051,7 @@ Item {
             visible: !!(cardRoot.row && !cardRoot.row.authorized && !cardRoot.row.demo)
             primary: true
             glyph: "󰌆"
-            label: "Sign in"
+            label: I18n.tr("Sign in")
             onTriggered: root.signIn(cardRoot.row.id)
           }
 
@@ -1066,8 +1067,8 @@ Item {
         Rectangle { width: parent.width; height: ui.hairline; color: ui.border }
 
         SettingsField {
-          label: "Display name"
-          placeholder: "Shown as the sender"
+          label: I18n.tr("Display name")
+          placeholder: I18n.tr("Shown as the sender")
           input: cardNameField
 
           TextInput {
@@ -1091,7 +1092,7 @@ Item {
 
           Text {
             textFormat: Text.PlainText
-            text: "Signature"
+            text: I18n.tr("Signature")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -1124,7 +1125,7 @@ Item {
               Text {
                 textFormat: Text.PlainText
                 visible: cardSignatureField.text === ""
-                text: "Appended to every message you send from this account."
+                text: I18n.tr("Appended to every message you send from this account.")
                 color: ui.faint
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.bodySmall
@@ -1134,7 +1135,7 @@ Item {
         }
 
         InfoRow {
-          label: "Servers"
+          label: I18n.tr("Servers")
           value: String((cardRoot.row && cardRoot.row.imapHost) || "—") + "  ·  "
             + String((cardRoot.row && cardRoot.row.smtpHost) || "—")
           hint: ""
@@ -1185,7 +1186,7 @@ Item {
             visible: !!(result && result.canTrust) || !!(offer && offer.fingerprint !== "")
             primary: !!(offer && offer.fingerprint !== "")
             glyph: "󰒃"
-            label: offer && offer.fingerprint !== "" ? "Trust it" : "Trust this certificate"
+            label: offer && offer.fingerprint !== "" ? I18n.tr("Trust it") : I18n.tr("Trust this certificate")
             onTriggered: {
               if (offer && offer.fingerprint !== "") root.trustCertificate(cardRoot.row.id, offer.fingerprint)
               else root.showCertificate(cardRoot.row.id)
@@ -1196,7 +1197,7 @@ Item {
             primary: cardRoot.dirty
             enabled: cardRoot.dirty
             glyph: "󰆓"
-            label: "Save"
+            label: I18n.tr("Save")
             onTriggered: service.updateAccount(cardRoot.row.id, {
               name: cardRoot.nameDraft, signature: cardRoot.signatureDraft
             }, function () { root.refresh() })
@@ -1205,7 +1206,7 @@ Item {
           SettingsButton {
             glyph: "󰑓"
             label: root.testingId === (cardRoot.row ? cardRoot.row.id : "")
-              ? "Checking…" : "Test connection"
+              ? "Checking…" : I18n.tr("Test connection")
             enabled: root.testingId === ""
             onTriggered: root.test(cardRoot.row.id)
           }
@@ -1213,14 +1214,14 @@ Item {
           SettingsButton {
             glyph: "󰌆"
             label: cardRoot.row && cardRoot.row.auth === "oauth2"
-              ? "Sign in again" : "Change password"
+              ? I18n.tr("Sign in again") : I18n.tr("Change password")
             visible: !!(cardRoot.row && !cardRoot.row.demo)
             onTriggered: root.signIn(cardRoot.row.id)
           }
 
           SettingsButton {
             glyph: cardRoot.row && cardRoot.row.enabled ? "󰏤" : "󰐊"
-            label: cardRoot.row && cardRoot.row.enabled ? "Pause syncing" : "Resume syncing"
+            label: cardRoot.row && cardRoot.row.enabled ? I18n.tr("Pause syncing") : I18n.tr("Resume syncing")
             onTriggered: service.updateAccount(cardRoot.row.id,
               { enabled: !cardRoot.row.enabled }, function () { root.refresh() })
           }
@@ -1229,7 +1230,7 @@ Item {
             danger: true
             glyph: "󰆴"
             label: root.confirmRemoveId === (cardRoot.row ? cardRoot.row.id : "")
-              ? "Really remove?" : "Remove"
+              ? I18n.tr("Really remove?") : I18n.tr("Remove")
             onTriggered: {
               if (root.confirmRemoveId === cardRoot.row.id) {
                 root.confirmRemoveId = ""
@@ -1253,7 +1254,7 @@ Item {
             textFormat: Text.PlainText
             topPadding: Style.space(6)
             bottomPadding: Style.space(4)
-            text: "Folders"
+            text: I18n.tr("Folders")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -1293,7 +1294,7 @@ Item {
                 visible: !heading
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                label: shown ? "Hide" : "Show"
+                label: shown ? I18n.tr("Hide") : I18n.tr("Show")
                 // Setting a folder back to what the name suggests forgets the
                 // choice, so a later rename is judged afresh.
                 onTriggered: {
@@ -1315,8 +1316,8 @@ Item {
           visible: !!(cardRoot.row && root.passwordForId === cardRoot.row.id)
 
           SettingsField {
-            label: "New password"
-            placeholder: "Password or app password"
+            label: I18n.tr("New password")
+            placeholder: I18n.tr("Password or app password")
             input: cardPasswordField
 
             TextInput {
@@ -1342,7 +1343,7 @@ Item {
 
           Text {
             textFormat: Text.PlainText
-            text: "Press Enter to store it in the keyring."
+            text: I18n.tr("Press Enter to store it in the keyring.")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -1363,8 +1364,8 @@ Item {
               : (root.signInCode !== ""
                  ? "Enter " + root.signInCode + " at " + root.signInUri
                    + " — the code is on your clipboard."
-                 : (root.signInUri !== "" ? "Finish signing in in your browser…"
-                                          : "Starting the sign-in…"))
+                 : (root.signInUri !== "" ? I18n.tr("Finish signing in in your browser…")
+                                          : I18n.tr("Starting the sign-in…")))
             color: root.signInError !== "" ? ui.urgent : ui.dim
             font.family: ui.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -1375,7 +1376,7 @@ Item {
             visible: root.signInUri !== ""
             primary: true
             glyph: "󰖟"
-            label: "Open sign-in page"
+            label: I18n.tr("Open sign-in page")
             onTriggered: if (Model.isSafeLink(root.signInUri)) Qt.openUrlExternally(root.signInUri)
           }
         }
@@ -1697,7 +1698,7 @@ Item {
       SettingsButton {
         visible: settingRow.type === "boolean"
         glyph: settingRow.value === true ? "󰄲" : "󰄱"
-        label: settingRow.value === true ? "On" : "Off"
+        label: settingRow.value === true ? "On" : I18n.tr("Off")
         onTriggered: settingRow.put(settingRow.value !== true)
       }
 

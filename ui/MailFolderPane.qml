@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import QtQuick.Controls
@@ -169,7 +170,7 @@ Item {
           textFormat: Text.PlainText
           visible: !root.collapsed
           anchors.verticalCenter: parent.verticalCenter
-          text: "New mail"
+          text: I18n.tr("New mail")
           color: ui.background
           font.family: ui.fontFamily
           font.pixelSize: Style.font.body
@@ -187,7 +188,7 @@ Item {
 
       PanelToolTip {
         visible: root.collapsed && composeHover.containsMouse
-        text: "New mail  (c)"
+        text: I18n.tr("New mail  (c)")
         fontFamily: ui.fontFamily
       }
     }
@@ -238,7 +239,7 @@ Item {
           textFormat: Text.PlainText
           visible: root.accounts.length === 0 && !root.collapsed
           width: parent.width
-          text: "No account yet — add one to see your folders here."
+          text: I18n.tr("No account yet — add one to see your folders here.")
           color: ui.faint
           font.family: ui.fontFamily
           font.pixelSize: Style.font.caption
@@ -417,7 +418,7 @@ Item {
             width: parent.width
             text: {
               if (!section.account) return ""
-              if (section.account.authorized === false) return "Needs sign-in"
+              if (section.account.authorized === false) return I18n.tr("Needs sign-in")
               return String(section.account.email)
             }
             color: section.account && section.account.authorized === false
@@ -515,7 +516,7 @@ Item {
         visible: section.folders.length === 0 && !root.collapsed
         width: parent.width
         leftPadding: Style.space(30)
-        text: "No folders cached yet."
+        text: I18n.tr("No folders cached yet.")
         color: ui.faint
         font.family: ui.fontFamily
         font.pixelSize: Style.font.caption

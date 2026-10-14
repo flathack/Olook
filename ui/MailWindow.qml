@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -309,9 +310,9 @@ Item {
 
   readonly property var moveTargets: {
     var out = [
-      { name: "archive", label: "Archive", glyph: "\u{f003c}" },
-      { name: "junk", label: "Junk Email", glyph: "\u{f0026}" },
-      { name: "trash", label: "Deleted Items", glyph: "\u{f01b4}" }
+      { name: "archive", label: I18n.tr("Archive"), glyph: "\u{f003c}" },
+      { name: "junk", label: I18n.tr("Junk Email"), glyph: "\u{f0026}" },
+      { name: "trash", label: I18n.tr("Deleted Items"), glyph: "\u{f01b4}" }
     ]
     var folders = mail.folders || []
     for (var i = 0; i < folders.length; i++) {
@@ -466,7 +467,7 @@ Item {
       visible: true
     })
     if (!win) {
-      mail.actionFailed("Could not open an appointment window.")
+      mail.actionFailed(I18n.tr("Could not open an appointment window."))
       return null
     }
     root.eventWindows.push(win)
@@ -501,7 +502,7 @@ Item {
       visible: true
     })
     if (!win) {
-      mail.actionFailed("Could not open a message window.")
+      mail.actionFailed(I18n.tr("Could not open a message window."))
       return null
     }
     // The window owns its message: fetched separately so the client behind it
@@ -536,7 +537,7 @@ Item {
       visible: true
     })
     if (!win) {
-      mail.actionFailed("Could not open a compose window.")
+      mail.actionFailed(I18n.tr("Could not open a compose window."))
       return null
     }
     root.composeWindows.push(win)
@@ -597,90 +598,90 @@ Item {
   readonly property bool hasMessage: root.current !== null
 
   readonly property var menuModel: [
-    { title: "File", items: [
-      { id: "compose", label: "New message", glyph: "󰝒", shortcut: "c" },
-      { id: "compose-window", label: "New message in its own window",
+    { title: I18n.tr("File"), items: [
+      { id: "compose", label: I18n.tr("New message"), glyph: "󰝒", shortcut: "c" },
+      { id: "compose-window", label: I18n.tr("New message in its own window"),
         glyph: "󰏋", shortcut: "Ctrl+N" },
       { kind: "separator" },
-      { id: "add-account", label: "Add an account…", glyph: "󰀓" },
-      { id: "settings", label: "Settings", glyph: "󰒓", shortcut: "Ctrl+," },
+      { id: "add-account", label: I18n.tr("Add an account…"), glyph: "󰀓" },
+      { id: "settings", label: I18n.tr("Settings"), glyph: "󰒓", shortcut: "Ctrl+," },
       { kind: "separator" },
-      { id: "refresh", label: "Check for mail", glyph: "󰑐", shortcut: "g" },
-      { id: "close", label: "Close window", glyph: "󰅖", shortcut: "Esc" }
+      { id: "refresh", label: I18n.tr("Check for mail"), glyph: "󰑐", shortcut: "g" },
+      { id: "close", label: I18n.tr("Close window"), glyph: "󰅖", shortcut: "Esc" }
     ] },
 
-    { title: "View", items: [
-      { kind: "header", label: "Folder pane" },
-      { id: "folders-auto", label: "Fit to window", kind: "radio",
+    { title: I18n.tr("View"), items: [
+      { kind: "header", label: I18n.tr("Folder pane") },
+      { id: "folders-auto", label: I18n.tr("Fit to window"), kind: "radio",
         checked: root.folderPanePref === "auto" },
-      { id: "folders-expanded", label: "Names", kind: "radio",
+      { id: "folders-expanded", label: I18n.tr("Names"), kind: "radio",
         checked: root.folderPanePref === "expanded" },
-      { id: "folders-icons", label: "Icons only", kind: "radio",
+      { id: "folders-icons", label: I18n.tr("Icons only"), kind: "radio",
         checked: root.folderPanePref === "icons" },
       { kind: "separator" },
-      { kind: "header", label: "Reading pane" },
-      { id: "reader-right", label: "Right", kind: "radio",
+      { kind: "header", label: I18n.tr("Reading pane") },
+      { id: "reader-right", label: I18n.tr("Right"), kind: "radio",
         checked: root.readingPanePref === "right", enabled: !root.stacked },
-      { id: "reader-bottom", label: "Bottom", kind: "radio",
+      { id: "reader-bottom", label: I18n.tr("Bottom"), kind: "radio",
         checked: root.readingPanePref === "bottom", enabled: !root.stacked },
       { kind: "separator" },
-      { id: "conversations", label: "Conversations", kind: "check",
+      { id: "conversations", label: I18n.tr("Conversations"), kind: "check",
         checked: mail.conversationMode },
       { kind: "separator" },
 
-      { kind: "header", label: "Sort by" },
-      { id: "sort-date", label: "Date", kind: "radio",
+      { kind: "header", label: I18n.tr("Sort by") },
+      { id: "sort-date", label: I18n.tr("Date"), kind: "radio",
         checked: mail.sortMode === "date" },
-      { id: "sort-sender", label: "Sender", kind: "radio",
+      { id: "sort-sender", label: I18n.tr("Sender"), kind: "radio",
         checked: mail.sortMode === "sender" },
-      { id: "sort-subject", label: "Subject", kind: "radio",
+      { id: "sort-subject", label: I18n.tr("Subject"), kind: "radio",
         checked: mail.sortMode === "subject" },
-      { id: "sort-size", label: "Size", kind: "radio",
+      { id: "sort-size", label: I18n.tr("Size"), kind: "radio",
         checked: mail.sortMode === "size" },
-      { id: "sort-unread", label: "Unread first", kind: "radio",
+      { id: "sort-unread", label: I18n.tr("Unread first"), kind: "radio",
         checked: mail.sortMode === "unread" },
       { kind: "separator" },
 
-      { kind: "header", label: "Message body" },
-      { id: "body-formatted", label: "Formatted", kind: "radio",
+      { kind: "header", label: I18n.tr("Message body") },
+      { id: "body-formatted", label: I18n.tr("Formatted"), kind: "radio",
         checked: readerPane.formatted, enabled: readerPane.hasRich },
-      { id: "body-plain", label: "Plain text", kind: "radio",
+      { id: "body-plain", label: I18n.tr("Plain text"), kind: "radio",
         checked: !readerPane.formatted, enabled: readerPane.hasRich }
     ] },
 
-    { title: "Message", items: [
-      { id: "reply", label: "Reply", glyph: "󰑚", shortcut: "r", enabled: root.hasMessage },
-      { id: "reply-all", label: "Reply all", glyph: "󰑛", shortcut: "a", enabled: root.hasMessage },
-      { id: "forward", label: "Forward", glyph: "󰒭", shortcut: "f", enabled: root.hasMessage },
+    { title: I18n.tr("Message"), items: [
+      { id: "reply", label: I18n.tr("Reply"), glyph: "󰑚", shortcut: "r", enabled: root.hasMessage },
+      { id: "reply-all", label: I18n.tr("Reply all"), glyph: "󰑛", shortcut: "a", enabled: root.hasMessage },
+      { id: "forward", label: I18n.tr("Forward"), glyph: "󰒭", shortcut: "f", enabled: root.hasMessage },
       { kind: "separator" },
-      { id: "move", label: "Move to folder…", glyph: "󰉒", shortcut: "v",
+      { id: "move", label: I18n.tr("Move to folder…"), glyph: "󰉒", shortcut: "v",
         enabled: root.hasMessage || root.selection.length > 0 },
-      { id: "archive", label: "Archive", glyph: "󰇠", shortcut: "e", enabled: root.hasMessage },
-      { id: "delete", label: "Delete", glyph: "󰩹", shortcut: "Del", enabled: root.hasMessage },
+      { id: "archive", label: I18n.tr("Archive"), glyph: "󰇠", shortcut: "e", enabled: root.hasMessage },
+      { id: "delete", label: I18n.tr("Delete"), glyph: "󰩹", shortcut: "Del", enabled: root.hasMessage },
       { kind: "separator" },
       { id: "flag", glyph: "󰈻", shortcut: "s", enabled: root.hasMessage,
-        label: root.current && root.current.flagged ? "Remove flag" : "Flag" },
+        label: root.current && root.current.flagged ? I18n.tr("Remove flag") : I18n.tr("Flag") },
       { id: "unread", glyph: "󰇮", shortcut: "u", enabled: root.hasMessage,
-        label: root.current && root.current.seen ? "Mark unread" : "Mark read" },
+        label: root.current && root.current.seen ? I18n.tr("Mark unread") : I18n.tr("Mark read") },
       { kind: "separator" },
-      { id: "categorise", label: "Categories…", glyph: "󰓹",
+      { id: "categorise", label: I18n.tr("Categories…"), glyph: "󰓹",
         enabled: root.hasMessage || root.selection.length > 0 },
       { kind: "separator" },
-      { id: "empty-folder", label: "Empty this folder…", glyph: "󰩹",
+      { id: "empty-folder", label: I18n.tr("Empty this folder…"), glyph: "󰩹",
         enabled: mail.canEmptyFolder },
       { kind: "separator" },
-      { id: "select-all", label: "Select all", glyph: "󰒆", shortcut: "Ctrl+A",
+      { id: "select-all", label: I18n.tr("Select all"), glyph: "󰒆", shortcut: "Ctrl+A",
         enabled: root.rows.length > 0 },
-      { id: "mark-all-read", label: "Mark everything here as read", glyph: "󰇮",
+      { id: "mark-all-read", label: I18n.tr("Mark everything here as read"), glyph: "󰇮",
         enabled: mail.unread > 0 },
       { kind: "separator" },
       { id: "undo", glyph: "󰕌", shortcut: "Ctrl+Z",
         enabled: mail.canUndo,
-        label: mail.undoLabel === "" ? "Undo" : "Undo " + mail.undoLabel }
+        label: mail.undoLabel === "" ? I18n.tr("Undo") : I18n.tr("Undo ") + mail.undoLabel }
     ] },
 
-    { title: "Help", items: [
-      { id: "shortcuts", label: "Keyboard shortcuts", glyph: "󰌌", shortcut: "?" }
+    { title: I18n.tr("Help"), items: [
+      { id: "shortcuts", label: I18n.tr("Keyboard shortcuts"), glyph: "󰌌", shortcut: "?" }
     ] }
   ]
 
@@ -1027,10 +1028,10 @@ Item {
               anchors.verticalCenter: parent.verticalCenter
               text: {
                 switch (root.view) {
-                case "mail": return "Mail"
-                case "calendar": return "Calendar"
-                case "settings": return "Settings"
-                default: return "People"
+                case "mail": return I18n.tr("Mail")
+                case "calendar": return I18n.tr("Calendar")
+                case "settings": return I18n.tr("Settings")
+                default: return I18n.tr("People")
                 }
               }
               color: ui.faint
@@ -1102,7 +1103,7 @@ Item {
                 // The refiners are only useful if they are discoverable, and
                 // the placeholder is the only place to say so without
                 // spending a panel on it the way Outlook does.
-                text: "Search mail — try from:, subject:, is:unread, has:attachment"
+                text: I18n.tr("Search mail — try from:, subject:, is:unread, has:attachment")
                 color: ui.faint
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.body
@@ -1125,18 +1126,18 @@ Item {
 
             MailButton {
               glyph: "󰏋"
-              tooltip: "New message in its own window  (Ctrl+N)"
+              tooltip: I18n.tr("New message in its own window  (Ctrl+N)")
               onTriggered: root.popOutCompose(null, null)
             }
             MailButton {
               glyph: mail.syncing ? "󰑖" : "󰑐"
-              tooltip: "Check for new mail  (g)"
+              tooltip: I18n.tr("Check for new mail  (g)")
               enabled: !mail.syncing
               onTriggered: mail.sync(false)
             }
             MailButton {
               glyph: "󰅖"
-              tooltip: "Close  (Esc)"
+              tooltip: I18n.tr("Close  (Esc)")
               onTriggered: root.close()
             }
           }
@@ -1467,8 +1468,8 @@ Item {
             text: {
               if (mail.error !== "") return mail.error
               if (mail.notice !== "") return mail.notice
-              if (mail.syncing) return "Checking for new mail…"
-              if (!mail.configured) return "No account configured"
+              if (mail.syncing) return I18n.tr("Checking for new mail…")
+              if (!mail.configured) return I18n.tr("No account configured")
               var total = mail.messages.length
               // A message waiting on a connection is worth saying every time
               // it is true, not only in the moment it failed to go.
@@ -1493,8 +1494,8 @@ Item {
             anchors.rightMargin: Style.space(16)
             anchors.verticalCenter: parent.verticalCenter
             text: mail.lastSync > 0
-              ? "Updated " + Model.shortTime(mail.lastSync, new Date())
-              : "Not synced yet"
+              ? I18n.tr("Updated ") + Model.shortTime(mail.lastSync, new Date())
+              : I18n.tr("Not synced yet")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -1539,7 +1540,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               width: parent.width
-              text: "Empty " + (mail.currentFolder
+              text: I18n.tr("Empty ") + (mail.currentFolder
                 ? Model.folderLabel(mail.currentFolder) : "this folder") + "?"
               color: ui.foreground
               font.family: ui.fontFamily
@@ -1551,7 +1552,7 @@ Item {
               textFormat: Text.PlainText
               width: parent.width
               text: mail.messages.length === 1
-                ? "One message will be deleted from the server for good."
+                ? I18n.tr("One message will be deleted from the server for good.")
                 : mail.messages.length
                   + " messages will be deleted from the server for good."
               color: ui.faint
@@ -1564,7 +1565,7 @@ Item {
               spacing: Style.space(8)
 
               ConfirmButton {
-                label: "Empty it"
+                label: I18n.tr("Empty it")
                 urgent: true
                 onTriggered: {
                   root.confirmEmpty = false
@@ -1573,7 +1574,7 @@ Item {
               }
 
               ConfirmButton {
-                label: "Keep them"
+                label: I18n.tr("Keep them")
                 onTriggered: root.confirmEmpty = false
               }
             }

@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import qs.Commons
@@ -221,9 +222,9 @@ Item {
   // What the chosen format actually sends, said once next to the control so
   // nobody has to guess what "Markdown" does to a message.
   readonly property string formatHint: {
-    if (root.format === "markdown") return "Sent as text and as HTML"
-    if (root.format === "html") return "Sent as you wrote it"
-    return "No formatting"
+    if (root.format === "markdown") return I18n.tr("Sent as text and as HTML")
+    if (root.format === "html") return I18n.tr("Sent as you wrote it")
+    return I18n.tr("No formatting")
   }
 
   function baseName(path) {
@@ -428,19 +429,19 @@ Item {
     var out = []
     var hour = new Date(now.getTime() + 3600 * 1000)
     hour.setMinutes(Math.ceil(hour.getMinutes() / 5) * 5, 0, 0)
-    out.push({ label: "In an hour", when: hour })
+    out.push({ label: I18n.tr("In an hour"), when: hour })
     if (now.getHours() < 17) {
       var evening = new Date(now); evening.setHours(18, 0, 0, 0)
-      out.push({ label: "This evening", when: evening })
+      out.push({ label: I18n.tr("This evening"), when: evening })
     }
     var tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1)
     tomorrow.setHours(8, 0, 0, 0)
-    out.push({ label: "Tomorrow morning", when: tomorrow })
+    out.push({ label: I18n.tr("Tomorrow morning"), when: tomorrow })
     var monday = new Date(now)
     monday.setDate(now.getDate() + ((8 - now.getDay()) % 7 || 7))
     monday.setHours(8, 0, 0, 0)
     if (monday.getTime() !== tomorrow.getTime())
-      out.push({ label: "Monday morning", when: monday })
+      out.push({ label: I18n.tr("Monday morning"), when: monday })
     return out
   }
 
@@ -481,7 +482,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: Style.space(24)
         anchors.verticalCenter: parent.verticalCenter
-        text: String(root.subjectText || "New message")
+        text: String(root.subjectText || I18n.tr("New message"))
         color: ui.foreground
         font.family: ui.fontFamily
         font.pixelSize: Style.font.title
@@ -520,7 +521,7 @@ Item {
             Text {
               textFormat: Text.PlainText
               anchors.verticalCenter: parent.verticalCenter
-              text: service && service.busy ? "Sending…" : "Send"
+              text: service && service.busy ? I18n.tr("Sending…") : I18n.tr("Send")
               color: root.canSend ? ui.background : ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.body
@@ -569,7 +570,7 @@ Item {
 
           PanelToolTip {
             visible: laterHover.containsMouse && !laterPopup.opened
-            text: "Send later"
+            text: I18n.tr("Send later")
             fontFamily: ui.fontFamily
           }
 
@@ -601,7 +602,7 @@ Item {
                 textFormat: Text.PlainText
                 leftPadding: Style.space(8)
                 bottomPadding: Style.space(4)
-                text: "Send later"
+                text: I18n.tr("Send later")
                 color: ui.faint
                 font.family: ui.fontFamily
                 font.pixelSize: Style.font.caption
@@ -699,7 +700,7 @@ Item {
                     id: laterGoText
                     textFormat: Text.PlainText
                     anchors.centerIn: parent
-                    text: "Schedule"
+                    text: I18n.tr("Schedule")
                     color: laterPopup.typedOk ? ui.background : ui.faint
                     font.family: ui.fontFamily
                     font.pixelSize: Style.font.caption
@@ -748,7 +749,7 @@ Item {
             visible: attachHover.containsMouse
             text: (root.attachments.length > 0
               ? root.attachments.length + " attached — add more"
-              : "Attach files") + "  (Ctrl+Shift+A)"
+              : I18n.tr("Attach files")) + "  (Ctrl+Shift+A)"
             fontFamily: ui.fontFamily
           }
         }
@@ -783,7 +784,7 @@ Item {
 
           PanelToolTip {
             visible: popOutHover.containsMouse
-            text: "Open in its own window  (Ctrl+Shift+O)"
+            text: I18n.tr("Open in its own window  (Ctrl+Shift+O)")
             fontFamily: ui.fontFamily
           }
         }
@@ -815,8 +816,8 @@ Item {
 
           PanelToolTip {
             visible: discardHover.containsMouse
-            text: root.canSaveDraft ? "Close — keeps a draft  (Esc)"
-                                    : "Discard  (Esc)"
+            text: root.canSaveDraft ? I18n.tr("Close — keeps a draft  (Esc)")
+                                    : I18n.tr("Discard  (Esc)")
             fontFamily: ui.fontFamily
           }
         }
@@ -837,12 +838,12 @@ Item {
       spacing: 0
 
       FieldRow {
-        label: "From"
+        label: I18n.tr("From")
         readOnlyValue: root.fromAccount ? String(root.fromAccount.email) : ""
       }
 
       FieldRow {
-        label: "To"
+        label: I18n.tr("To")
         field: toField
         TextInput {
           id: toField
@@ -867,7 +868,7 @@ Item {
             textFormat: Text.PlainText
             anchors.verticalCenter: parent.verticalCenter
             visible: toField.text === ""
-            text: "Recipients, separated by commas"
+            text: I18n.tr("Recipients, separated by commas")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.body
@@ -876,7 +877,7 @@ Item {
       }
 
       FieldRow {
-        label: "Cc"
+        label: I18n.tr("Cc")
         field: ccField
         TextInput {
           id: ccField
@@ -905,7 +906,7 @@ Item {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
           visible: !root.showBcc
-          text: "Bcc"
+          text: I18n.tr("Bcc")
           color: bccHover.containsMouse ? ui.accent : ui.faint
           font.family: ui.fontFamily
           font.pixelSize: Style.font.caption
@@ -925,7 +926,7 @@ Item {
       }
 
       FieldRow {
-        label: "Bcc"
+        label: I18n.tr("Bcc")
         field: bccField
         visible: root.showBcc
         TextInput {
@@ -951,7 +952,7 @@ Item {
             textFormat: Text.PlainText
             anchors.verticalCenter: parent.verticalCenter
             visible: bccField.text === ""
-            text: "Blind copies — nobody else sees these"
+            text: I18n.tr("Blind copies — nobody else sees these")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.body
@@ -960,7 +961,7 @@ Item {
       }
 
       FieldRow {
-        label: "Subject"
+        label: I18n.tr("Subject")
         field: subjectField
         TextInput {
           id: subjectField
@@ -1000,7 +1001,7 @@ Item {
           Text {
             textFormat: Text.PlainText
             anchors.verticalCenter: parent.verticalCenter
-            text: "Write in"
+            text: I18n.tr("Write in")
             color: ui.faint
             font.family: ui.fontFamily
             font.pixelSize: Style.font.caption
@@ -1015,9 +1016,9 @@ Item {
             fontFamily: ui.fontFamily
             value: root.format
             options: [
-              { value: "plain", label: "Plain text" },
-              { value: "markdown", label: "Markdown" },
-              { value: "html", label: "HTML" }
+              { value: "plain", label: I18n.tr("Plain text") },
+              { value: "markdown", label: I18n.tr("Markdown") },
+              { value: "html", label: I18n.tr("HTML") }
             ]
             onChanged: function (next) { root.format = next }
           }
@@ -1037,14 +1038,14 @@ Item {
           spacing: Style.space(4)
           visible: root.format !== "plain"
 
-          FormatButton { kind: "bold"; label: "B"; bold: true; tip: "Bold (Ctrl+B)" }
-          FormatButton { kind: "italic"; label: "I"; italic: true; tip: "Italic (Ctrl+I)" }
-          FormatButton { kind: "heading"; label: "H"; tip: "Heading" }
-          FormatButton { kind: "link"; label: "Link"; tip: "Link (Ctrl+K)" }
-          FormatButton { kind: "bullets"; label: "\u2022 List"; tip: "Bulleted list" }
-          FormatButton { kind: "numbers"; label: "1. List"; tip: "Numbered list" }
-          FormatButton { kind: "quote"; label: "Quote"; tip: "Quote" }
-          FormatButton { kind: "code"; label: "Code"; tip: "Code" }
+          FormatButton { kind: "bold"; label: "B"; bold: true; tip: I18n.tr("Bold (Ctrl+B)") }
+          FormatButton { kind: "italic"; label: "I"; italic: true; tip: I18n.tr("Italic (Ctrl+I)") }
+          FormatButton { kind: "heading"; label: "H"; tip: I18n.tr("Heading") }
+          FormatButton { kind: "link"; label: "Link"; tip: I18n.tr("Link (Ctrl+K)") }
+          FormatButton { kind: "bullets"; label: "\u2022 List"; tip: I18n.tr("Bulleted list") }
+          FormatButton { kind: "numbers"; label: "1. List"; tip: I18n.tr("Numbered list") }
+          FormatButton { kind: "quote"; label: I18n.tr("Quote"); tip: I18n.tr("Quote") }
+          FormatButton { kind: "code"; label: I18n.tr("Code"); tip: I18n.tr("Code") }
         }
 
         Flow {
@@ -1148,9 +1149,9 @@ Item {
               visible: bodyField.text === ""
               text: {
                 if (root.format === "markdown")
-                  return "Write your message in Markdown — **bold**, lists, links…"
-                if (root.format === "html") return "Write HTML — it is sent as-is."
-                return "Write your message…"
+                  return I18n.tr("Write your message in Markdown — **bold**, lists, links…")
+                if (root.format === "html") return I18n.tr("Write HTML — it is sent as-is.")
+                return I18n.tr("Write your message…")
               }
               color: ui.faint
               font.family: ui.fontFamily
@@ -1191,8 +1192,8 @@ Item {
 
             PanelToolTip {
               visible: quoteHover.containsMouse
-              text: root.quoteExpanded ? "Hide the quoted message"
-                                       : "Show the quoted message"
+              text: root.quoteExpanded ? I18n.tr("Hide the quoted message")
+                                       : I18n.tr("Show the quoted message")
               fontFamily: ui.fontFamily
             }
           }
@@ -1213,7 +1214,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: "Preview"
+              text: I18n.tr("Preview")
               color: ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.caption

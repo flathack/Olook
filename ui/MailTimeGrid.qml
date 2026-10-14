@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import QtQuick.Controls
 import qs.Commons
@@ -206,7 +207,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
-                    text: parent.modelData.summary || "(no title)"
+                    text: parent.modelData.summary || I18n.tr("(no title)")
                     color: ui.foreground
                     font.family: ui.fontFamily
                     font.pixelSize: Style.font.caption
@@ -377,7 +378,7 @@ Item {
                       elide: Text.ElideRight
                       maximumLineCount: parent.parent.roomForBoth ? 2 : 1
                       text: (parent.parent.roomForBoth ? "" : parent.parent.clockText + "  ")
-                            + (modelData.event.summary || "(no title)")
+                            + (modelData.event.summary || I18n.tr("(no title)"))
                       color: ui.foreground
                       font.family: ui.fontFamily
                       font.pixelSize: Style.font.caption

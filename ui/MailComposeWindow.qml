@@ -1,3 +1,4 @@
+import "I18n.js" as I18n
 import QtQuick
 import Quickshell
 import qs.Commons
@@ -25,7 +26,7 @@ FloatingWindow {
 
   title: {
     var subject = composeForm.subjectText.trim()
-    return (subject === "" ? "New message" : subject) + " — Olook"
+    return (subject === "" ? I18n.tr("New message") : subject) + " — Olook"
   }
   color: ui ? ui.background : "#101010"
   implicitWidth: Style.space(760)
