@@ -130,8 +130,8 @@ Item {
     if (!row) return ""
     if (row.demo) return I18n.tr("Sample data")
     if (!row.authorized) return I18n.tr("Needs sign-in")
-    if (!row.enabled) return "Paused"
-    return "Signed in"
+    if (!row.enabled) return I18n.tr("Paused")
+    return I18n.tr("Signed in")
   }
 
   function statusColor(row) {
@@ -143,8 +143,8 @@ Item {
 
   function authLabel(row) {
     if (!row) return ""
-    if (row.demo) return "no server"
-    return row.auth === "oauth2" ? "provider sign-in" : "password"
+    if (row.demo) return I18n.tr("no server")
+    return row.auth === "oauth2" ? I18n.tr("provider sign-in") : I18n.tr("password")
   }
 
   Component.onCompleted: refresh()

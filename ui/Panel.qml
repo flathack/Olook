@@ -439,8 +439,8 @@ Panel {
               var unread = root.filteredAccount ? (root.filteredAccount.unread || 0)
                                                 : mail.unread
               if (unread > 0)
-                return unread + (unread === 1 ? " unread message" : " unread messages")
-              return "You're all caught up"
+                return unread + (unread === 1 ? I18n.tr(" unread message") : I18n.tr(" unread messages"))
+              return I18n.tr("You're all caught up")
             }
             foreground: root.foreground
             fontFamily: root.fontFamily
@@ -474,7 +474,7 @@ Panel {
             textFormat: Text.PlainText
             visible: mail.error !== "" || mail.notice !== ""
             width: parent.width
-            text: mail.notice !== "" ? mail.notice : mail.error
+            text: I18n.tr(mail.notice !== "" ? mail.notice : mail.error)
             color: mail.notice !== "" ? root.dim : root.urgent
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
@@ -682,7 +682,7 @@ Panel {
       text: {
         if (!chip.account) return I18n.tr("All inboxes")
         var unread = chip.account.unread || 0
-        return String(chip.account.email) + (unread > 0 ? " — " + unread + " unread" : "")
+        return String(chip.account.email) + (unread > 0 ? " — " + unread + I18n.tr(" unread") : "")
       }
       fontFamily: root.fontFamily
     }

@@ -484,7 +484,7 @@ Item {
           if (!section.account) return ""
           var name = String(section.account.name || section.account.email)
           if (section.account.authorized === false) return name + " — needs sign-in"
-          if (section.account.unread > 0) return name + " — " + section.account.unread + " unread"
+          if (section.account.unread > 0) return name + " — " + section.account.unread + I18n.tr(" unread")
           return name
         }
         fontFamily: ui.fontFamily
@@ -680,7 +680,7 @@ Item {
       text: {
         var label = Model.folderLabel(folderRow.folder)
         var unseen = folderRow.folder ? folderRow.folder.unseen : 0
-        return unseen > 0 ? label + " — " + unseen + " unread" : label
+        return unseen > 0 ? label + " — " + unseen + I18n.tr(" unread") : label
       }
       fontFamily: ui.fontFamily
     }

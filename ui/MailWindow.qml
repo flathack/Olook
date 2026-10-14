@@ -1466,19 +1466,19 @@ Item {
             anchors.leftMargin: Style.space(16)
             anchors.verticalCenter: parent.verticalCenter
             text: {
-              if (mail.error !== "") return mail.error
-              if (mail.notice !== "") return mail.notice
+              if (mail.error !== "") return I18n.tr(mail.error)
+              if (mail.notice !== "") return I18n.tr(mail.notice)
               if (mail.syncing) return I18n.tr("Checking for new mail…")
               if (!mail.configured) return I18n.tr("No account configured")
               var total = mail.messages.length
               // A message waiting on a connection is worth saying every time
               // it is true, not only in the moment it failed to go.
               var waiting = (mail.outboxWaiting > 0
-                ? ",  " + mail.outboxWaiting + " waiting to send" : "")
+                ? ",  " + mail.outboxWaiting + I18n.tr(" waiting to send") : "")
                 + (mail.outboxScheduled > 0
-                ? ",  " + mail.outboxScheduled + " scheduled" : "")
-              return total + (total === 1 ? " message" : " messages")
-                + (mail.unread > 0 ? ",  " + mail.unread + " unread" : "")
+                ? ",  " + mail.outboxScheduled + I18n.tr(" scheduled") : "")
+              return total + (total === 1 ? I18n.tr(" message") : I18n.tr(" messages"))
+                + (mail.unread > 0 ? ",  " + mail.unread + I18n.tr(" unread") : "")
                 + waiting
             }
             color: mail.error !== "" ? ui.urgent : ui.dim
@@ -1541,7 +1541,7 @@ Item {
               textFormat: Text.PlainText
               width: parent.width
               text: I18n.tr("Empty ") + (mail.currentFolder
-                ? Model.folderLabel(mail.currentFolder) : "this folder") + "?"
+                ? Model.folderLabel(mail.currentFolder) : I18n.tr("this folder")) + "?"
               color: ui.foreground
               font.family: ui.fontFamily
               font.pixelSize: Style.font.subtitle
@@ -1554,7 +1554,7 @@ Item {
               text: mail.messages.length === 1
                 ? I18n.tr("One message will be deleted from the server for good.")
                 : mail.messages.length
-                  + " messages will be deleted from the server for good."
+                  + I18n.tr(" messages will be deleted from the server for good.")
               color: ui.faint
               font.family: ui.fontFamily
               font.pixelSize: Style.font.bodySmall
@@ -1612,7 +1612,7 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: Style.space(16)
             text: root.selection.length > 1
-              ? "Categories for " + root.selection.length + " messages"
+              ? "Categories for " + root.selection.length + I18n.tr(" messages")
               : "Categories"
             color: ui.foreground
             font.family: ui.fontFamily

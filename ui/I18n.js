@@ -2,6 +2,21 @@
 // Display strings only; protocol values and message contents stay unchanged.
 var language = "de";
 var german = {
+  "Paused": "Pausiert",
+  "Signed in": "Angemeldet",
+  "no server": "ohne Server",
+  "provider sign-in": "Anbieter-Anmeldung",
+  "password": "Passwort",
+  " message": " Nachricht",
+  " messages": " Nachrichten",
+  " unread": " ungelesen",
+  " unread message": " ungelesene Nachricht",
+  " unread messages": " ungelesene Nachrichten",
+  "You're all caught up": "Alles gelesen",
+  " waiting to send": " warten auf Versand",
+  " scheduled": " geplant",
+  "this folder": "diesen Ordner",
+  " messages will be deleted from the server for good.": " Nachrichten werden endgültig vom Server gelöscht.",
   "File": "Datei",
   "View": "Ansicht",
   "Message": "Nachricht",
