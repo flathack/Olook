@@ -101,46 +101,14 @@ Item {
 
   // ------------------------------------------------------------------ runner
 
-  Component {
-    id: cliRunner
-
-    Process {
-      id: proc
-      property var handler: null
-      property string label: ""
-      running: false
-      stdout: StdioCollector { id: outCollector; waitForEnd: true }
-      stderr: StdioCollector { id: errCollector; waitForEnd: true }
-      onExited: function (exitCode) {
-        var payload = Model.parseJson(outCollector.text, null)
-        if (proc.handler) {
-          proc.handler(exitCode === 0 && payload && payload.ok !== false,
-                       payload, String(errCollector.text || ""))
-        }
-        Qt.callLater(function () { proc.destroy() })
-      }
-    }
-  }
-
   function run(args, handler, label) {
-    if (!cliPath || cliPath.indexOf("bin/olook") === -1) {
-      root.error = "Mail engine not found next to the plugin."
-      return null
-    }
-    var command = [cliPath, "--json"].concat(args)
-    var process = cliRunner.createObject(root, {
-      command: command, handler: handler, label: label || ""
-    })
-    if (!process) {
-      root.error = "Could not start the mail engine."
-      return null
-    }
-    process.running = true
-    return process
+    return runWithInput(args, "", handler, label)
   }
 
-  // Same runner, but the payload goes in on stdin — passwords and message
-  // bodies never belong on a command line other processes can read.
+  // Every engine call goes through here, with nothing on its command line
+  // but --argv-stdin: the arguments follow on stdin as one JSON line, then
+  // the payload. A command line is readable by every account on this
+  // machine, and these carry searches, appointments, contacts, passwords.
   Component {
     id: stdinRunner
 
@@ -174,8 +142,9 @@ Item {
       return null
     }
     var process = stdinRunner.createObject(root, {
-      command: [cliPath, "--json"].concat(args),
-      payload: String(input === undefined || input === null ? "" : input),
+      command: [cliPath, "--argv-stdin"],
+      payload: JSON.stringify(["--json"].concat(args.map(String))) + "\n"
+        + String(input === undefined || input === null ? "" : input),
       handler: handler, label: label || ""
     })
     if (!process) {
@@ -497,7 +466,7 @@ Item {
         reportFailure(payload, stderrText, "Could not mark the message read")
         root.loadMessages()
       }
-      root.refreshStatus()
+      root.refreshStatus(true)
     }, "mark-read")
   }
 
@@ -703,10 +672,10 @@ Item {
     }
     root.extrasAuthorizing = true
     root.extrasNeedApproval = false
-    var args = [cliPath, "contacts-auth", "--account", id, "--stream"]
+    var args = ["contacts-auth", "--account", id, "--stream"]
     if (readOnly) args.push("--read-only")
     var process = authRunner.createObject(root, {
-      command: args,
+      argv: args,
       handler: function (event) {
         var kind = String(event.event || "")
         if (kind === "error") {
@@ -794,6 +763,26 @@ Item {
       // one unreachable account cannot turn into a sync on every repaint.
       root.fetchedMonths[window] = true
       root.syncCalendar(null)
+    }, "calendar")
+  }
+
+  // One appointment by its uid and day, read from the engine's cache. The
+  // bar's calendar names an appointment this way rather than sending its
+  // contents, which on a command line any local account could read.
+  // A recurring appointment shares its uid across days; the day picks one.
+  function findEvent(day, uid, handler) {
+    var start = new Date(String(day) + "T00:00:00")
+    if (isNaN(start.getTime()) || !uid) { handler(null); return }
+    var next = new Date(start.getTime() + 36 * 3600 * 1000)
+    run(["calendar", "--start", String(day), "--end", Qt.formatDate(next, "yyyy-MM-dd")],
+        function (ok, payload) {
+      var list = ok && payload ? payload.events || [] : []
+      for (var i = 0; i < list.length; i++)
+        if (String(list[i].uid) === String(uid) && String(list[i].day) === String(day)) {
+          handler(list[i])
+          return
+        }
+      handler(null)
     }, "calendar")
   }
 
@@ -1124,6 +1113,50 @@ Item {
     }, "images")
   }
 
+  // Which way a message body opens: formatted | plain. Kept by the engine so
+  // the client, the terminal and every window agree, and so the choice the
+  // reader made once outlives the message that taught it.
+  property string bodyView: "formatted"
+
+  // What a new message is written in: plain | markdown | html. Settings
+  // chooses it; the composer can switch one message without changing it.
+  property string composeFormat: "plain"
+
+  function loadComposeFormat() {
+    run(["compose-format"], function (ok, payload) {
+      if (ok && payload && payload.format) root.composeFormat = String(payload.format)
+    }, "compose-format")
+  }
+
+  function setComposeFormat(value) {
+    if (!value || value === root.composeFormat) return
+    run(["compose-format", String(value)], function (ok, payload, stderrText) {
+      if (!ok) {
+        reportFailure(payload, stderrText, "Could not remember that")
+        return
+      }
+      root.composeFormat = String((payload && payload.format) || value)
+    }, "compose-format")
+  }
+
+  function loadBodyView() {
+    run(["body-view"], function (ok, payload) {
+      if (ok && payload && payload.view) root.bodyView = String(payload.view)
+    }, "body-view")
+  }
+
+  function setBodyView(value, done) {
+    if (!value || value === root.bodyView) return
+    run(["body-view", String(value)], function (ok, payload, stderrText) {
+      if (!ok) {
+        reportFailure(payload, stderrText, "Could not remember that")
+        return
+      }
+      root.bodyView = String((payload && payload.view) || value)
+      if (done) done()
+    }, "body-view")
+  }
+
   // Senders whose pictures load without being asked. Kept by the engine, so
   // the terminal and the client agree about who is on the list.
   function trustSender(address, trusted, done) {
@@ -1396,7 +1429,7 @@ Item {
         return
       }
       root.loadMessages()
-      root.refreshStatus()
+      root.refreshStatus(true)
     }, "flag")
   }
 
@@ -1654,7 +1687,7 @@ Item {
     var id = String(accountId || root.accountId || "")
     if (!id) return null
     var process = authRunner.createObject(root, {
-      command: [cliPath, "auth", id, "--stream"],
+      argv: ["auth", id, "--stream"],
       handler: handler
     })
     if (process) process.running = true
@@ -1666,6 +1699,15 @@ Item {
 
     Process {
       id: authProc
+      // Account ids are email addresses: arguments go in on stdin, as for
+      // every other engine call (see runWithInput).
+      property var argv: []
+      command: [root.cliPath, "--argv-stdin"]
+      stdinEnabled: true
+      onStarted: {
+        authProc.write(JSON.stringify(authProc.argv.map(String)) + "\n")
+        authProc.stdinEnabled = false
+      }
       property var handler: null
       running: false
       stdout: SplitParser {
@@ -1879,7 +1921,10 @@ Item {
       property var handler: null
       running: false
       stdout: StdioCollector { id: pickOut; waitForEnd: true }
+      stderr: StdioCollector { id: pickErr; waitForEnd: true }
       onExited: function (exitCode) {
+        if (exitCode === 3)
+          root.actionFailed(String(pickErr.text || "No file chooser available.").trim())
         var paths = []
         var lines = String(pickOut.text || "").split("\n")
         for (var i = 0; i < lines.length; i++) {
@@ -1966,7 +2011,14 @@ Item {
     Process {
       id: watchProc
       property string accountId: ""
-      command: [root.cliPath, "--json", "watch", "--account", watchProc.accountId]
+      // The account id (an email address) on stdin, not the command line:
+      // this process runs for as long as the window is open.
+      command: [root.cliPath, "--argv-stdin"]
+      stdinEnabled: true
+      onStarted: {
+        watchProc.write(JSON.stringify(["--json", "watch", "--account", watchProc.accountId]) + "\n")
+        watchProc.stdinEnabled = false
+      }
       running: false
       stdout: SplitParser {
         onRead: function (line) {
@@ -1999,9 +2051,10 @@ Item {
   }
 
   function pickFiles(handler) {
+    // The engine asks the desktop's own file dialog (the XDG portal) and
+    // falls back to zenity, which Omarchy does not ship.
     var process = pickerRunner.createObject(root, {
-      command: ["zenity", "--file-selection", "--multiple", "--separator=\n",
-                "--title=Attach files to this message"],
+      command: [cliPath, "pick-files"],
       handler: handler
     })
     if (!process) {
@@ -2058,5 +2111,7 @@ Item {
     refreshStatus(true)
     refreshOutbox()
     loadImagePolicy()
+    loadBodyView()
+    loadComposeFormat()
   }
 }

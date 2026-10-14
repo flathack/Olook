@@ -9,6 +9,7 @@ ShellRoot {
   QtObject {
     id: style
     property color background: "#181818"
+    property color surface: "#202020"
     property color foreground: "#eeeeee"
     property color border: "#555555"
     property color hover: "#444444"
@@ -29,8 +30,23 @@ ShellRoot {
     property int unreadEverywhere: 0
     property string filter: "all"
     property var moved: []
+    property string composeFormat: "markdown"
+    property string bodyView: "formatted"
+    property bool sending: false
+    property bool savingDraft: false
+    property var draftCallbacks: []
+    function saveDraft(draft, uid, account, callback) { draftCallbacks.push(callback) }
+    function previewDraft(draft, callback) {}
+    function renderMarkdown(text, callback) {}
+    function loadContacts() {}
+    function setBodyView(view) { bodyView = view }
     function foldersFor(account) { return [{name:"INBOX",special:"inbox"},{name:"Archive",special:"archive"}] }
     function moveMany(entries, target) { moved.push({entries:entries,target:target}) }
+  }
+  MailCompose {
+    id: composer
+    visible: false; width: 800; height: 500
+    ui: style; service: service; account: ({id:"qa",demo:false})
   }
   FloatingWindow {
     id: readerWindow
@@ -99,6 +115,19 @@ ShellRoot {
           return null
         }
         function test_interactions() {
+          composer.draft = {subject:"First draft",body:"Fixture"}
+          assertEqual(composer.format, "markdown", "New drafts use stored compose format")
+          composer.saveDraft()
+          assertEqual(service.draftCallbacks.length, 1, "Draft save pending")
+          composer.draft = {subject:"Second draft",body:"Other fixture"}
+          service.draftCallbacks[0](true,{uid:123})
+          assertEqual(composer.draftUid, 0, "Late save cannot overwrite new draft UID")
+          composer.draft = {}
+          reader.service = service
+          reader.setFormatted(false)
+          assertEqual(service.bodyView, "plain", "Reader toggle persists view preference")
+          service.bodyView = "formatted"
+          assertTrue(reader.formatted, "Reader follows shared preference")
           assertEqual(I18n.tr("Reply"), "Antworten", "German action label")
           assertEqual(I18n.tr("Uncatalogued text"), "Uncatalogued text", "Unknown text stays unchanged")
           assertEqual(Model.folderLabel({name:"INBOX", special:"inbox"}), "Posteingang", "German display folder")

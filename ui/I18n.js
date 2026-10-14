@@ -2,6 +2,11 @@
 // Display strings only; protocol values and message contents stay unchanged.
 var language = "de";
 var german = {
+  "Compose messages in": "Neue Nachrichten schreiben als",
+  "No formatting. Reads the same in every mail program.": "Ohne Formatierung. In jedem Mailprogramm gleich lesbar.",
+  "Type *bold* or # Heading; sent as text and as HTML, with a preview while you write.": "Schreibe *fett* oder # Überschrift; Versand als Text und HTML, mit Vorschau beim Schreiben.",
+  "Write the HTML yourself; it is sent as you wrote it.": "HTML selbst schreiben; es wird unverändert versendet.",
+
   "Paused": "Pausiert",
   "Signed in": "Angemeldet",
   "no server": "ohne Server",

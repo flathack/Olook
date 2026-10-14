@@ -640,6 +640,17 @@ def cmd_sync(args):
                     store.save_folders(conn, account["id"], enriched)
                 summary["labelsRefreshed"] = _refresh_labels(
                     session, conn, folders, counts, known, folder)
+                # Proton's All Mail holds Trash and Spam too, which Proton's
+                # own default leaves out; they are read along with it so the
+                # list can do the same.
+                if any(f["name"] == folder and f["special"] == "all" for f in folders):
+                    for f in folders:
+                        if f["special"] in ("trash", "junk"):
+                            try:
+                                mailbox.sync_folder(session, conn, f["name"], limit=500,
+                                                    apply_rules=False)
+                            except (mailbox.MailError, imaplib.IMAP4.error):
+                                pass
                 summary["account"] = account["id"]
                 summary["ok"] = True
                 results.append(summary)
@@ -677,6 +688,14 @@ def cmd_list(args):
         unread_only=args.unread, flagged_only=args.flagged,
         query=args.query or "", sort=args.sort)
     store.attach_labels(conn, account["id"], messages)
+    if any(f["name"] == folder and f["special"] == "all"
+           for f in store.list_folders(conn, account["id"])):
+        # All Mail without what is in Trash or Spam, as Proton shows it by
+        # default. Gmail's All Mail has neither, so nothing changes there.
+        binned = store.message_ids_in(conn, account["id"], [
+            f["name"] for f in store.list_folders(conn, account["id"])
+            if f["special"] in ("trash", "junk")])
+        messages = [m for m in messages if m.get("messageId") not in binned]
     if args.conversations:
         # Your replies live in Sent; a conversation elsewhere includes them.
         sent = _role_folder(conn, account, "sent")
@@ -1401,6 +1420,7 @@ def cmd_body(args):
                     pass
                 else:
                     store.set_flags(conn, account["id"], folder, [args.uid], seen=True)
+                    _follow_copies(session, conn, account, folder, [args.uid], seen=True)
         cached = store.get_body(conn, account["id"], folder, args.uid)
     elif args.mark_read:
         _mark_seen(account, conn, folder, [args.uid], True)
@@ -1541,6 +1561,8 @@ def cmd_flag(args):
         with mailbox.Session(account) as session:
             session.select(args.folder, readonly=False)
             session.store_flags(uids, [flag], add=add)
+            store.set_flags(conn, account["id"], args.folder, uids, **local)
+            _follow_copies(session, conn, account, args.folder, uids, **local)
     store.set_flags(conn, account["id"], args.folder, uids, **local)
     emit({"ok": True, "uids": uids, "set": args.set}, lambda d: "Updated.")
 
@@ -1549,7 +1571,32 @@ def _mark_seen(account, conn, folder, uids, seen):
     with mailbox.Session(account) as session:
         session.select(folder, readonly=False)
         session.store_flags(uids, ["\\Seen"], add=seen)
-    store.set_flags(conn, account["id"], folder, uids, seen=seen)
+        store.set_flags(conn, account["id"], folder, uids, seen=seen)
+        _follow_copies(session, conn, account, folder, uids, seen=seen)
+
+
+def _follow_copies(session, conn, account, folder, uids, **flags):
+    """After a flag change, the other folders holding the same messages.
+
+    The server sets a flag on every copy -- All Mail, the message's folder
+    and labels on Proton, labels on Gmail -- so the cached copies follow,
+    and those folders' unread counts are asked for again. Only these few: a
+    count for every folder costs a round trip each on servers without
+    LIST-STATUS, on every message opened. Best effort: the flag itself is
+    already set.
+    """
+    others = store.copies_elsewhere(conn, account["id"], folder, uids)
+    for other, copies in others.items():
+        store.set_flags(conn, account["id"], other, copies, **flags)
+    if "seen" not in flags:
+        return
+    wanted = {folder, *others}
+    wanted.update(f["name"] for f in store.list_folders(conn, account["id"])
+                  if f["special"] == "all")
+    try:
+        store.set_folder_counts(conn, account["id"], session.status_all(sorted(wanted)))
+    except (mailbox.MailError, imaplib.IMAP4.error):
+        pass
 
 
 def cmd_move(args):
@@ -1583,6 +1630,28 @@ def cmd_images(args):
         return
     emit({"ok": True, "policy": config.set_image_policy(args.policy)},
          lambda d: f"Images now load when: {d['policy']}")
+
+
+def cmd_compose_format(args):
+    """What a new message is written in: plain, markdown or html."""
+    if not args.format:
+        emit({"ok": True, "format": config.compose_format(),
+              "choices": list(config.COMPOSE_FORMATS)},
+             lambda d: f"New messages: {d['format']}  (of {', '.join(d['choices'])})")
+        return
+    emit({"ok": True, "format": config.set_compose_format(args.format)},
+         lambda d: f"New messages now: {d['format']}")
+
+
+def cmd_body_view(args):
+    """Whether a message body opens formatted, or as the plain text under it."""
+    if not args.view:
+        emit({"ok": True, "view": config.body_view(),
+              "choices": list(config.BODY_VIEWS)},
+             lambda d: f"Bodies open: {d['view']}  (of {', '.join(d['choices'])})")
+        return
+    emit({"ok": True, "view": config.set_body_view(args.view)},
+         lambda d: f"Bodies now open: {d['view']}")
 
 
 def cmd_trust(args):
@@ -1977,7 +2046,7 @@ def parse_mailto(uri):
             # Links write line breaks as %0D%0A; the composer wants \n.
             body = value.replace("\r\n", "\n")
     return {"to": fields["to"], "cc": fields["cc"], "bcc": fields["bcc"],
-            "subject": subject, "body": body, "format": "plain"}
+            "subject": subject, "body": body, "format": config.compose_format()}
 
 
 def cmd_mailto(args):
@@ -2050,6 +2119,132 @@ def cmd_finish_setup(args):
         print(_describe_setup(payload))
         return
     emit(payload, _describe_setup)
+
+
+def cmd_notify(args):
+    """A desktop notification whose text never touches a command line.
+
+    notify-send takes the title and body as arguments, and a process's
+    arguments are readable by every account on the machine (/proc) for as
+    long as it runs -- which, waiting for a click, is minutes. So the text
+    comes in on stdin as JSON ({"summary", "body", "app", "icon"}) and goes
+    to the notification server over D-Bus. Prints the action when the
+    notification is clicked, as `notify-send --action` does, and exits when
+    it is answered, closed, or after --wait seconds.
+
+    Without PyGObject there is no D-Bus here, and the notification says only
+    which app it is from: less useful, but nothing private on display.
+    """
+    try:
+        data = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        data = {}
+    app = str(data.get("app") or "Olook")
+    icon = str(data.get("icon") or "")
+    summary = str(data.get("summary") or app)
+    body = str(data.get("body") or "")
+    try:
+        import gi
+        gi.require_version("Gio", "2.0")
+        from gi.repository import Gio, GLib
+    except (ImportError, ValueError):
+        done = subprocess.run(["notify-send", f"--app-name={app}", f"--icon={icon}",
+                               "--action=default=Open", "--", app, "Open to see it"],
+                              capture_output=True, text=True, timeout=args.wait + 5)
+        if done.stdout.strip():
+            print(done.stdout.strip(), flush=True)
+        return
+
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    loop = GLib.MainLoop()
+    sent = {"id": None}
+
+    def answered(_conn, _sender, _path, _iface, name, params):
+        values = params.unpack()
+        if values[0] != sent["id"]:
+            return
+        if name == "ActionInvoked":
+            print(values[1], flush=True)
+        loop.quit()
+
+    # Listening before sending, so an answer cannot arrive unheard.
+    for signal in ("ActionInvoked", "NotificationClosed"):
+        bus.signal_subscribe(None, "org.freedesktop.Notifications", signal,
+                             "/org/freedesktop/Notifications", None,
+                             Gio.DBusSignalFlags.NONE, answered)
+    reply = bus.call_sync(
+        "org.freedesktop.Notifications", "/org/freedesktop/Notifications",
+        "org.freedesktop.Notifications", "Notify",
+        GLib.Variant("(susssasa{sv}i)",
+                     (app, 0, icon, summary, body, ["default", "Open"], {}, -1)),
+        GLib.VariantType("(u)"), Gio.DBusCallFlags.NONE, -1, None)
+    sent["id"] = reply.unpack()[0]
+    GLib.timeout_add_seconds(max(1, args.wait), loop.quit)
+    loop.run()
+
+
+def _portal_pick(title):
+    """Files chosen in the desktop's own file dialog, through the XDG portal.
+
+    Returns None when there is no portal to ask; [] when the dialog was
+    cancelled.
+    """
+    try:
+        import gi
+        gi.require_version("Gio", "2.0")
+        from gi.repository import Gio, GLib
+        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    except Exception:
+        return None
+    token = f"olook{os.getpid()}"
+    sender = bus.get_unique_name()[1:].replace(".", "_")
+    handle = f"/org/freedesktop/portal/desktop/request/{sender}/{token}"
+    loop = GLib.MainLoop()
+    found = {"paths": None}
+
+    def answered(_conn, _sender, _path, _iface, _name, params):
+        code, results = params.unpack()
+        uris = results.get("uris", []) if code == 0 else []
+        found["paths"] = [urllib.parse.unquote(urllib.parse.urlparse(u).path)
+                          for u in uris if str(u).startswith("file://")]
+        loop.quit()
+
+    # Listening on the request's path before asking, so the answer is heard.
+    bus.signal_subscribe("org.freedesktop.portal.Desktop", "org.freedesktop.portal.Request",
+                         "Response", handle, None, Gio.DBusSignalFlags.NONE, answered)
+    try:
+        bus.call_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+                      "org.freedesktop.portal.FileChooser", "OpenFile",
+                      GLib.Variant("(ssa{sv})", ("", title, {
+                          "handle_token": GLib.Variant("s", token),
+                          "multiple": GLib.Variant("b", True)})),
+                      GLib.VariantType("(o)"), Gio.DBusCallFlags.NONE, -1, None)
+    except GLib.Error:
+        return None
+    loop.run()
+    return found["paths"] or []
+
+
+def cmd_pick_files(args):
+    """Ask for files to attach; prints one path per line.
+
+    The desktop portal's dialog, which every Omarchy has; zenity where there
+    is no portal. Exit 3, with a reason, when there is neither -- before,
+    Attach did nothing at all on a machine without zenity.
+    """
+    title = "Attach files to this message"
+    paths = _portal_pick(title)
+    if paths is None and shutil.which("zenity"):
+        done = subprocess.run(["zenity", "--file-selection", "--multiple",
+                               "--separator=\n", f"--title={title}"],
+                              capture_output=True, text=True)
+        paths = [p for p in done.stdout.splitlines() if p.strip()]
+    if paths is None:
+        print("No file chooser: the desktop portal did not answer and zenity is "
+              "not installed.", file=sys.stderr)
+        sys.exit(3)
+    for path in paths:
+        print(path)
 
 
 def cmd_seen(args):
@@ -2501,6 +2696,16 @@ def build_parser():
                    help="pin only if the server presents this SHA-256 fingerprint")
     p.set_defaults(func=cmd_trust_cert)
 
+    p = sub.add_parser("notify", help="show a notification read from stdin as JSON "
+                                      "(summary, body, app, icon); prints the action "
+                                      "when clicked")
+    p.add_argument("--wait", type=int, default=600,
+                   help="seconds to wait for a click (default 600)")
+    p.set_defaults(func=cmd_notify)
+
+    p = sub.add_parser("pick-files", help="ask for files to attach; one path per line")
+    p.set_defaults(func=cmd_pick_files)
+
     p = sub.add_parser("test", help="check IMAP and SMTP credentials")
     p.add_argument("account", nargs="?")
     p.set_defaults(func=cmd_test)
@@ -2719,6 +2924,17 @@ def build_parser():
                    help="verified | trusted | never")
     p.set_defaults(func=cmd_images)
 
+    p = sub.add_parser("compose-format",
+                       help="what new messages are written in")
+    p.add_argument("format", nargs="?", default="", help="plain | markdown | html")
+    p.set_defaults(func=cmd_compose_format)
+
+    p = sub.add_parser("body-view",
+                       help="whether message bodies open formatted or plain")
+    p.add_argument("view", nargs="?", default="",
+                   help="formatted | plain")
+    p.set_defaults(func=cmd_body_view)
+
     p = sub.add_parser("trust", help="senders whose images load by themselves")
     p.add_argument("action", choices=["list", "add", "remove"])
     p.add_argument("address", nargs="?", default="")
@@ -2848,6 +3064,17 @@ def main(argv=None):
     global JSON_OUT
     parser = build_parser()
     argv = sys.argv[1:] if argv is None else argv
+    # The window's way in: the arguments as a JSON array on stdin's first
+    # line, the command's own input after it. What it passes -- a search, an
+    # appointment's title, a contact's address -- would otherwise sit in
+    # /proc/<pid>/cmdline, readable by every account on the machine.
+    if argv == ["--argv-stdin"]:
+        try:
+            argv = json.loads(sys.stdin.readline())
+        except ValueError:
+            argv = None
+        if not isinstance(argv, list) or not all(isinstance(a, str) for a in argv):
+            fail(CliError("--argv-stdin wants a JSON array of strings on the first line"))
     args = parser.parse_args(_glue(argv, _value_options(parser)))
     JSON_OUT = bool(getattr(args, "json", False))
     os.umask(0o077)

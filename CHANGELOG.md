@@ -10,6 +10,64 @@
 - Prevent late list/body responses from resurrecting deleted mail or replacing a different message. Restore rows on failed moves/deletions.
 - Keep the HTML engine alive, load it asynchronously, and avoid layout of hidden rich/plain text. Update read flags after delivering the body.
 
+## 1.2.11
+
+**Security**
+- Nothing the window asks of the engine is on a command line any more:
+  searches, appointments being added or edited, contacts being saved, mail
+  rules and account addresses were engine arguments, readable by every
+  account on the machine through /proc while the engine ran. Every call now
+  passes `--argv-stdin` and its arguments as a JSON line on stdin, including
+  the IMAP watchers and sign-ins, which run for minutes.
+
+## 1.2.10
+
+- Clicking a new-mail notification opens that message in a window of its
+  own, as clicking it in the bar's panel does, instead of the whole client.
+
+## 1.2.9
+
+- Outlook's way of choosing a format: **Settings → General → Compose
+  messages in** sets what new messages, replies and mailto: links are
+  written in (`olook compose-format`). In the composer, the "Write in" row
+  and its dropdown are gone; the formats are buttons at the start of the
+  formatting line, so it is one line instead of two.
+
+## 1.2.8
+
+From the Proton reports on #1:
+
+- Starting a new message no longer replaces the previous draft. Closing a
+  message saves it on the way out; when the next one was started before
+  that save answered, the answer gave the new message the old draft's uid.
+- Reading a message clears its unread mark everywhere it is: in All Mail,
+  its folder and its labels too, not only where it was opened.
+- Attach works without zenity, which Omarchy does not ship: the desktop's
+  own file dialog (the XDG portal) is asked first. Before, Attach did nothing.
+- All Mail leaves out what is in Trash or Spam, as Proton does by default.
+- A sync no longer forgets a folder's role (Sent, Trash, All Mail) until the
+  next full folder listing.
+- The **Formatted** / **Plain text** toggle over a message body is
+  remembered. It went back to formatted for every message, so choosing plain
+  text meant choosing it again for the next one, in every window, for as long
+  as the client stayed open. How you like to read mail is one decision, so it
+  is now kept by the engine: `olook body-view [formatted|plain]` sets it
+  outside the client too. Remote pictures stay per message, on purpose.
+  (thanks @nagualcode, #4)
+
+## 1.2.7
+
+**Security**
+- New-mail notifications no longer carry the sender and subject on a
+  command line, where every account on the machine could read them through
+  /proc while the notification waited for a click. `olook notify` takes the
+  text on stdin and hands it to the notification server over D-Bus (with
+  PyGObject, which Omarchy ships; without it, the notification only says
+  which app it is from).
+- An appointment opened from Olook Calendar 1.0.7 is named by its uid and
+  day, and read from Olook's own cache, instead of arriving with its title,
+  place and notes on the command line.
+
 ## 1.2.6
 
 Proton Mail, from the reports on #1:

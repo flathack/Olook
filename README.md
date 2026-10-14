@@ -30,7 +30,7 @@ session; the panel opens on **All** again after a restart.
   through them with `←` / `→`
 - Read, reply, reply-all, forward, archive, delete, flag, mark read/unread
 - HTML mail rendered properly, with remote images blocked and a toggle back to
-  plain text
+  plain text that sticks: choose it once and every later message reads that way
 - Compose and send as plain text, Markdown, or HTML, with the message
   autosaved to the Drafts folder so closing the composer never loses it
 - Push mail: an IMAP IDLE connection per account, so new mail and its
@@ -280,7 +280,10 @@ the message to the right of the list or underneath it.
 
 ### Writing
 
-The composer has a **Write in** dropdown with three choices:
+New messages are written in the format chosen under **Settings → General →
+Compose messages in** (`olook compose-format` from a terminal). The line above
+the body switches one message, Outlook's *Format text* style: **Plain text**,
+**Markdown** or **HTML**, followed by the formatting buttons for the latter two.
 
 | Format | What is sent |
 |---|---|
@@ -288,7 +291,7 @@ The composer has a **Write in** dropdown with three choices:
 | Markdown | `multipart/alternative` — your Markdown as `text/plain`, and a rendered `text/html` beside it. Headings, lists, quotes, code, links, bold/italic/strike. |
 | HTML | `multipart/alternative` — your HTML as `text/html`, and a text flattening of it as `text/plain`. Sent as you wrote it. |
 
-Markdown is the useful default for anything with structure: people whose client
+Markdown is a good choice for anything with structure: people whose client
 shows plain text still read exactly what you typed.
 
 The paperclip (or `Ctrl+Shift+A`) attaches files, and so does dropping them on
@@ -331,6 +334,14 @@ Mail that arrives as HTML is rendered, not flattened: a **Formatted** /
 message has an HTML part. Formatted mail is drawn on a light card rather than
 the dark theme, because mail HTML is written for a white background and picks
 its own text colours.
+
+That choice is remembered. Choosing **Plain text** once leaves every later
+message — and every window, and the next time you open Olook — in plain text,
+because how you like to read mail is one decision, not one per message. Choose
+**Formatted** again to put it back; the same setting is `olook body-view
+[formatted|plain]` from a terminal. Remote pictures are deliberately *not*
+remembered this way: allowing one sender's tracking pixel says nothing about
+the next one's.
 
 **Pictures.** A remote picture in mail is usually a tracking pixel, so none is
 fetched until something says it may be. Settings → General chooses what:

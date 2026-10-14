@@ -5,3 +5,5 @@
 Die Übersetzung macht keine Netzwerkaufrufe und verändert keine Mailinhalte, Mailheader, Konto-IDs, Server-Ordnerpfade oder Befehlsnamen. Bei Erweiterungen dürfen Darstellungstexte nicht mit Protokollwerten verwechselt werden; insbesondere bleiben `To`, `Cc` und `Subject` als Header-Schlüssel unverändert.
 
 Die deutschen Dateien wurden auf Petras ThinkPad installiert und in der echten Oberfläche geprüft. Dazu bestehen die Service-/Interaktionstests und die Privacy-Tests. Änderungen an der vollständigen Mailansicht benötigen nach Installation einen Neustart der Omarchy-Shell.
+
+Upstream 1.2.7 bis 1.2.11 wurde am 14.10.2026 integriert. Neue Format-Einstellungen und Format-Schaltflächen sind ebenfalls übersetzt. Die persistenten Reader-Einstellungen verwenden setFormatted, während der Fork die Mail zuerst ausliefert und das Gelesen-Flag im Hintergrund setzt. Danach werden auch die Ordnerzähler aktualisiert. Tests prüfen zusätzlich verspätete Entwurfsantworten, persistente Einstellungen, kontoübergreifende Message-ID-Isolation und die Übergabe von Argumenten sowie Nutzdaten auf stdin.
